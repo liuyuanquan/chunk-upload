@@ -60,8 +60,20 @@ export class WorkerPool {
 
         // 设置 Worker 错误处理
         worker.onerror = (error) => {
+          console.error('Worker 错误详情:', {
+            message: error.message,
+            filename: error.filename,
+            lineno: error.lineno,
+            colno: error.colno,
+            error: error.error,
+          })
           this.handleWorkerError(workerInstance, error)
         }
+        
+        // 监听 Worker 的未捕获错误
+        worker.addEventListener('error', (event) => {
+          console.error('Worker 未捕获错误:', event)
+        })
 
         this.workers.push(workerInstance)
       } catch (error) {
@@ -135,9 +147,30 @@ export class WorkerPool {
   ): void {
     const task = workerInstance.currentTask
     if (task) {
-      task.reject(
-        new Error(`Worker 错误: ${error.message || '未知错误'}`),
-      )
+      // 构建详细的错误消息
+      let errorMessage = 'Worker 错误'
+      
+      if (error.message) {
+        errorMessage += `: ${error.message}`
+      } else if (error.filename) {
+        errorMessage += `: 文件 ${error.filename}`
+      } else if (error.lineno) {
+        errorMessage += `: 第 ${error.lineno} 行`
+      } else {
+        errorMessage += ': 未知错误'
+      }
+      
+      // 添加更多调试信息
+      if (error.error) {
+        const errorObj = error.error
+        if (errorObj instanceof Error) {
+          errorMessage += ` (${errorObj.name}: ${errorObj.message})`
+        } else if (typeof errorObj === 'string') {
+          errorMessage += ` (${errorObj})`
+        }
+      }
+      
+      task.reject(new Error(errorMessage))
       workerInstance.isBusy = false
       workerInstance.currentTask = null
     }
@@ -166,12 +199,31 @@ export class WorkerPool {
     workerInstance.isBusy = true
     workerInstance.currentTask = task
 
-    workerInstance.worker.postMessage({
-      file: task.file,
-      CHUNK_SIZE: task.CHUNK_SIZE,
-      startIndex: task.startIndex,
-      endIndex: task.endIndex,
-    })
+    try {
+      // 尝试发送消息到 Worker
+      // File 对象可以通过结构化克隆传递，但如果失败会抛出错误
+      workerInstance.worker.postMessage({
+        file: task.file,
+        CHUNK_SIZE: task.CHUNK_SIZE,
+        startIndex: task.startIndex,
+        endIndex: task.endIndex,
+      })
+    } catch (error) {
+      // 如果 postMessage 失败（例如 File 对象无法序列化）
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error)
+      
+      task.reject(
+        new Error(
+          `无法发送消息到 Worker: ${errorMessage}。可能是 File 对象无法序列化。`,
+        ),
+      )
+      
+      workerInstance.isBusy = false
+      workerInstance.currentTask = null
+      this.processNextTask(workerInstance)
+    }
   }
 
   /**

@@ -12,10 +12,24 @@ interface WorkerMessage {
  * Web Worker for parallel chunk processing
  */
 onmessage = async (e: MessageEvent<WorkerMessage>) => {
-  const { file, CHUNK_SIZE, startIndex, endIndex } = e.data
-  const promises: Promise<ChunkInfo>[] = []
-
   try {
+    const { file, CHUNK_SIZE, startIndex, endIndex } = e.data
+
+    // 验证数据
+    if (!file || !(file instanceof File)) {
+      throw new Error('无效的 File 对象')
+    }
+
+    if (typeof CHUNK_SIZE !== 'number' || CHUNK_SIZE <= 0) {
+      throw new Error(`无效的分片大小: ${CHUNK_SIZE}`)
+    }
+
+    if (typeof startIndex !== 'number' || typeof endIndex !== 'number') {
+      throw new Error(`无效的索引范围: ${startIndex}-${endIndex}`)
+    }
+
+    const promises: Promise<ChunkInfo>[] = []
+
     for (let i = startIndex; i < endIndex; i++) {
       promises.push(createChunk(file, i, CHUNK_SIZE))
     }
@@ -43,7 +57,7 @@ onmessage = async (e: MessageEvent<WorkerMessage>) => {
       uploadError = {
         type: 'WORKER_ERROR' as any,
         message: errorMessage,
-        file,
+        file: e.data?.file, // 使用原始数据中的 file
         originalError: error instanceof Error ? error : undefined,
       }
     }
