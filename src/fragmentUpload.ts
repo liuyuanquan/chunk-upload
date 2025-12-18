@@ -2,17 +2,22 @@ import type {
   FileInfo,
   FragmentUploadOptions,
   UploadError,
+  CancelController,
 } from './types'
 import { fragmentFile } from './fragmentFile'
+import { validateFile } from './utils/fileValidator'
+import { createCancelController } from './utils/cancelController'
+import { withRetry } from './utils/retry'
 
 /**
  * Fragment upload function - batch callback mode
  * All chunks of a file are processed before callback
+ * @returns 取消控制器
  */
 export function fragmentUpload(
   selector: string,
   options?: FragmentUploadOptions,
-): void {
+): CancelController {
   const el = document.querySelector(selector) as HTMLInputElement
   if (!el) {
     throw new Error(`元素未找到: ${selector}`)
@@ -24,7 +29,12 @@ export function fragmentUpload(
     chunkSize,
     onError,
     splitCallback,
+    onProgress,
+    validation,
+    retry,
   } = options || {}
+
+  const cancelController = createCancelController()
 
   el.onchange = async () => {
     const files = el.files ? Array.from(el.files) : []
@@ -35,17 +45,40 @@ export function fragmentUpload(
     let hasError = false
 
     for (const file of files) {
-      // 如果已经有错误，停止处理
-      if (hasError) break
+      // 如果已经有错误或已取消，停止处理
+      if (hasError || cancelController.isCancelled()) break
 
       try {
-        const chunks = await fragmentFile(file, chunkSize, (error) => {
-          hasError = true
-          onError?.(error)
-        })
+        // 文件验证
+        if (validation) {
+          const validationError = validateFile(file, validation)
+          if (validationError) {
+            hasError = true
+            onError?.(validationError)
+            continue
+          }
+        }
 
-        // 如果处理过程中出现错误，chunks 可能为空
-        if (hasError) continue
+        // 使用重试机制处理文件
+        const processFile = async () => {
+          return await fragmentFile(
+            file,
+            chunkSize,
+            (error) => {
+              hasError = true
+              onError?.(error)
+            },
+            onProgress,
+            cancelController,
+          )
+        }
+
+        const chunks = retry
+          ? await withRetry(processFile, retry)
+          : await processFile()
+
+        // 如果处理过程中出现错误或已取消，跳过
+        if (hasError || cancelController.isCancelled()) continue
 
         const fileInfo: FileInfo = {
           name: file.name,
@@ -71,6 +104,10 @@ export function fragmentUpload(
           lastCallback?.(results)
         }
       } catch (error) {
+        if (cancelController.isCancelled()) {
+          break
+        }
+
         hasError = true
         const uploadError: UploadError = {
           type: error instanceof Error && 'type' in error
@@ -84,4 +121,6 @@ export function fragmentUpload(
       }
     }
   }
+
+  return cancelController
 }
