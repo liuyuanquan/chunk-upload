@@ -205,10 +205,72 @@ function cancelProcessing() {
   }
 }
 
+// 创建测试文件并测试
+async function createTestFileAndTest() {
+  try {
+    // 创建 5MB 测试文件
+    const size = 5 * 1024 * 1024
+    const content = new Uint8Array(size)
+    for (let i = 0; i < size; i++) {
+      content[i] = i % 256
+    }
+    const blob = new Blob([content], { type: 'application/octet-stream' })
+    const testFile = new File([blob], 'test-5mb.bin', {
+      type: 'application/octet-stream',
+      lastModified: Date.now(),
+    })
+
+    console.log('创建测试文件:', testFile.name, `大小: ${(testFile.size / 1024 / 1024).toFixed(2)} MB`)
+
+    // 使用 fragmentUpload 处理测试文件
+    const { fragmentUpload } = await import('@xumi/chunk-upload-lib')
+    
+    const startTime = Date.now()
+    console.log('开始处理测试文件...')
+
+    const result = await fragmentUpload([testFile], {
+      onProgress: (progress) => {
+        updateProgress(progress.file, progress)
+        console.log(`进度: ${progress.percentage}%`)
+      },
+      onError: (error) => {
+        displayError(error)
+        console.error('错误:', error)
+      },
+      perCallback: (fileInfo) => {
+        displayFileResult(fileInfo)
+        console.log('文件处理完成:', fileInfo)
+      },
+    })
+
+    const endTime = Date.now()
+    const duration = ((endTime - startTime) / 1000).toFixed(2)
+    console.log(`✅ 测试完成: ${result.length} 个文件，耗时 ${duration} 秒`)
+    
+    setStatus(`测试完成: ${result.length} 个文件，耗时 ${duration} 秒`, 'success')
+  } catch (error) {
+    console.error('测试失败:', error)
+    setStatus(`测试失败: ${error instanceof Error ? error.message : String(error)}`, 'error')
+  }
+}
+
+function setStatus(message: string, type: 'success' | 'error' | 'info' = 'info') {
+  const statusDiv = document.createElement('div')
+  statusDiv.className = `status ${type}`
+  statusDiv.textContent = message
+  statusDiv.style.marginTop = '1rem'
+  document.querySelector('.container')?.appendChild(statusDiv)
+  
+  setTimeout(() => {
+    statusDiv.remove()
+  }, 5000)
+}
+
 // 事件监听
 startBtn.addEventListener('click', startProcessing)
 cancelBtn.addEventListener('click', cancelProcessing)
 clearBtn.addEventListener('click', clearAll)
+document.getElementById('test-btn')?.addEventListener('click', createTestFileAndTest)
 
 // 文件选择变化时自动开始处理
 fileInput.addEventListener('change', () => {
