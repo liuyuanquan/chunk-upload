@@ -60,19 +60,31 @@ export class WorkerPool {
 
         // 设置 Worker 错误处理
         worker.onerror = (error) => {
-          console.error('Worker 错误详情:', {
+          console.error('[WorkerPool] Worker 错误详情:', {
             message: error.message,
             filename: error.filename,
             lineno: error.lineno,
             colno: error.colno,
             error: error.error,
+            workerFileName: this.workerFileName,
           })
           this.handleWorkerError(workerInstance, error)
         }
         
         // 监听 Worker 的未捕获错误
         worker.addEventListener('error', (event) => {
-          console.error('Worker 未捕获错误:', event)
+          console.error('[WorkerPool] Worker 未捕获错误:', {
+            message: event.message,
+            filename: (event as any).filename,
+            lineno: (event as any).lineno,
+            colno: (event as any).colno,
+            error: (event as any).error,
+          })
+        })
+        
+        // 监听 Worker 消息错误
+        worker.addEventListener('messageerror', (event) => {
+          console.error('[WorkerPool] Worker 消息错误:', event)
         })
 
         this.workers.push(workerInstance)
@@ -200,6 +212,11 @@ export class WorkerPool {
     workerInstance.currentTask = task
 
     try {
+      // 验证 File 对象
+      if (!task.file || !(task.file instanceof File)) {
+        throw new Error('无效的 File 对象')
+      }
+
       // 尝试发送消息到 Worker
       // File 对象可以通过结构化克隆传递，但如果失败会抛出错误
       workerInstance.worker.postMessage({
@@ -214,9 +231,18 @@ export class WorkerPool {
         ? error.message
         : String(error)
       
+      console.error('发送消息到 Worker 失败:', {
+        error: errorMessage,
+        fileName: task.file?.name,
+        fileSize: task.file?.size,
+        chunkSize: task.CHUNK_SIZE,
+        startIndex: task.startIndex,
+        endIndex: task.endIndex,
+      })
+      
       task.reject(
         new Error(
-          `无法发送消息到 Worker: ${errorMessage}。可能是 File 对象无法序列化。`,
+          `无法发送消息到 Worker: ${errorMessage}。可能是 File 对象无法序列化或 Worker 未正确加载。`,
         ),
       )
       
