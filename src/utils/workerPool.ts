@@ -60,35 +60,9 @@ export class WorkerPool {
 
         // 设置 Worker 错误处理
         worker.onerror = (error) => {
-          const errorDetails = {
-            message: error.message || '未知错误',
-            filename: error.filename || '未知文件',
-            lineno: error.lineno || '未知行号',
-            colno: error.colno || '未知列号',
-            error: error.error,
-            workerFileName: this.workerFileName,
-            errorType: error.error?.constructor?.name || typeof error.error,
-            errorString: error.error?.toString(),
-          }
-          console.error('[WorkerPool] Worker 错误详情:', errorDetails)
+          console.error('[WorkerPool] Worker 错误:', error.message || '未知错误')
           this.handleWorkerError(workerInstance, error)
         }
-        
-        // 监听 Worker 的未捕获错误
-        worker.addEventListener('error', (event) => {
-          console.error('[WorkerPool] Worker 未捕获错误:', {
-            message: event.message,
-            filename: (event as any).filename,
-            lineno: (event as any).lineno,
-            colno: (event as any).colno,
-            error: (event as any).error,
-          })
-        })
-        
-        // 监听 Worker 消息错误
-        worker.addEventListener('messageerror', (event) => {
-          console.error('[WorkerPool] Worker 消息错误:', event)
-        })
 
         this.workers.push(workerInstance)
       } catch (error) {
@@ -204,15 +178,6 @@ export class WorkerPool {
         errorMessage += ': 未知错误（无错误详情）'
       }
       
-      console.error('[WorkerPool] 处理 Worker 错误:', {
-        errorMessage,
-        taskFileName: task.file?.name,
-        taskFileSize: task.file?.size,
-        chunkSize: task.CHUNK_SIZE,
-        startIndex: task.startIndex,
-        endIndex: task.endIndex,
-      })
-      
       task.reject(new Error(errorMessage))
       workerInstance.isBusy = false
       workerInstance.currentTask = null
@@ -262,14 +227,7 @@ export class WorkerPool {
         ? error.message
         : String(error)
       
-      console.error('发送消息到 Worker 失败:', {
-        error: errorMessage,
-        fileName: task.file?.name,
-        fileSize: task.file?.size,
-        chunkSize: task.CHUNK_SIZE,
-        startIndex: task.startIndex,
-        endIndex: task.endIndex,
-      })
+      console.error('[WorkerPool] 发送消息失败:', errorMessage)
       
       task.reject(
         new Error(

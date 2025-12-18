@@ -15,7 +15,6 @@ export function getWorkerUrl(workerFileName: string = 'work.js'): URL {
   }
 
   const importMetaUrl = import.meta.url
-  console.log('[Worker URL] import.meta.url:', importMetaUrl)
 
   try {
     // 开发环境（Vite）：使用源文件
@@ -25,21 +24,11 @@ export function getWorkerUrl(workerFileName: string = 'work.js'): URL {
       // workerUrl.ts 在 src/utils/ 目录下，work.ts 在 src/ 目录下
       // 所以需要向上到 src/ 目录
       const url = new URL(`../${sourceFileName}`, importMetaUrl)
-      console.log('[Worker URL] 开发模式:', {
-        href: url.href,
-        sourceFileName,
-        importMetaUrl,
-      })
       return url
     }
 
     // 生产环境：使用构建后的文件
     const url = new URL(`../${workerFileName}`, importMetaUrl)
-    console.log('[Worker URL] 生产模式:', {
-      href: url.href,
-      workerFileName,
-      importMetaUrl,
-    })
     return url
   } catch (error) {
     console.error('[Worker URL] 解析失败:', {
@@ -71,7 +60,6 @@ export function createWorker(
   }
 
   const importMetaUrl = import.meta.url
-  console.log('[createWorker] import.meta.url:', importMetaUrl)
 
   try {
     // 开发环境：使用 .ts 文件
@@ -93,33 +81,19 @@ export function createWorker(
 
     // 添加 Worker 加载错误监听
     worker.addEventListener('error', (event) => {
-      console.error('[createWorker] Worker 加载错误:', {
+      console.error('[Worker] 加载错误:', {
         message: event.message,
         filename: event.filename,
         lineno: event.lineno,
         colno: event.colno,
         error: event.error,
-        sourceFileName,
-        importMetaUrl,
       })
-    })
-
-    console.log('[createWorker] Worker 创建成功:', {
-      sourceFileName,
-      importMetaUrl,
-      isDev,
     })
 
     return worker
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('[createWorker] 创建 Worker 失败:', {
-      workerFileName,
-      importMetaUrl,
-      error: errorMessage,
-      errorObj: error,
-      errorStack: error instanceof Error ? error.stack : undefined,
-    })
+    console.error('[Worker] 创建失败:', errorMessage)
     throw new Error(
       `无法创建 Worker: ${workerFileName}. 错误: ${errorMessage}`,
     )
