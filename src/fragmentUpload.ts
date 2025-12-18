@@ -21,6 +21,8 @@ async function processFiles(
     perCallback,
     lastCallback,
     chunkSize,
+    workerCount,
+    adaptiveChunkSize = true,
     onError,
     splitCallback,
     onProgress,
@@ -47,18 +49,20 @@ async function processFiles(
         }
       }
 
-      // 使用重试机制处理文件
-      const processFile = async () => {
-        return await fragmentFile(
-          file,
-          chunkSize,
-          (error) => {
-            onError?.(error)
-          },
-          onProgress,
-          cancelController,
-        )
-      }
+        // 使用重试机制处理文件
+        const processFile = async () => {
+          return await fragmentFile(
+            file,
+            chunkSize,
+            (error) => {
+              onError?.(error)
+            },
+            onProgress,
+            cancelController,
+            workerCount,
+            adaptiveChunkSize,
+          )
+        }
 
       const chunks = retry
         ? await withRetry(processFile, retry)

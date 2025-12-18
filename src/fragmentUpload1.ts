@@ -18,6 +18,8 @@ async function processFiles1(
   const {
     callback,
     chunkSize,
+    workerCount,
+    adaptiveChunkSize = true,
     onError,
     onProgress,
     validation,
@@ -40,15 +42,16 @@ async function processFiles1(
         }
       }
 
-      await fragmentFile1(
-        file,
-        chunkSize,
-        callback,
-        onError,
-        onProgress,
-        cancelController,
-        retry,
-      )
+        await fragmentFile1(
+          file,
+          chunkSize,
+          callback,
+          onError,
+          onProgress,
+          cancelController,
+          retry,
+          adaptiveChunkSize,
+        )
     } catch (error) {
       if (cancelController.isCancelled()) {
         throw error

@@ -29,8 +29,12 @@ export interface FragmentUploadOptions {
   lastCallback?: (filesInfo: FileInfo[]) => void
   /** 文件分片完成时的回调（文件的所有分片处理完成后调用） */
   splitCallback?: (fileInfo: FileInfo) => void
-  /** 分片大小（字节），默认 5MB */
+  /** 分片大小（字节），默认根据文件大小自动计算 */
   chunkSize?: number
+  /** Worker 数量，默认根据文件大小自动计算 */
+  workerCount?: number
+  /** 是否启用自适应分片大小，默认 true */
+  adaptiveChunkSize?: boolean
   /** 错误回调 */
   onError?: (error: UploadError) => void
   /** 进度回调 */
@@ -45,8 +49,12 @@ export interface FragmentUploadOptions {
  * Options for fragmentUpload1
  */
 export interface FragmentUpload1Options {
-  /** 分片大小（字节），默认 5MB */
+  /** 分片大小（字节），默认根据文件大小自动计算 */
   chunkSize?: number
+  /** Worker 数量，默认根据文件大小自动计算 */
+  workerCount?: number
+  /** 是否启用自适应分片大小，默认 true */
+  adaptiveChunkSize?: boolean
   /** 每个分片完成时的回调（每个分片处理完成后立即调用） */
   callback?: (chunk: ChunkInfo & { isDone: boolean }) => void
   /** 错误回调 */

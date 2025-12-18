@@ -1,6 +1,7 @@
 import SparkMD5 from 'spark-md5'
 import type { ChunkInfo, UploadError } from './types'
 import { ChunkUploadError } from './types'
+import { calculateHash } from './utils/hashOptimizer'
 
 // 使用 LRU 缓存策略限制内存使用
 const MAX_CACHE_SIZE = 100
@@ -37,7 +38,6 @@ export function createChunk(
   return new Promise((resolve, reject) => {
     const start = index * chunkSize
     const end = Math.min(start + chunkSize, file.size)
-    const spark = new SparkMD5.ArrayBuffer()
     const fileReader = new FileReader()
 
     // 文件读取错误处理
@@ -71,10 +71,9 @@ export function createChunk(
         if (hashMap.has(fileBuffer)) {
           hash = hashMap.get(fileBuffer)!
         } else {
-          // 计算哈希
+          // 计算哈希（使用优化策略）
           try {
-            spark.append(fileBuffer)
-            hash = spark.end()
+            hash = calculateHash(fileBuffer)
             hashMap.set(fileBuffer, hash)
 
             // 清理缓存

@@ -7,24 +7,30 @@ import type {
 import { ChunkUploadError } from './types'
 import { getWorkerPool } from './utils/workerPool'
 import { createCancelController } from './utils/cancelController'
-
-const THREAD_COUNT = navigator.hardwareConcurrency || 4
+import {
+  calculateChunkStrategy,
+  calculateWorkerCount,
+} from './utils/chunkStrategy'
 
 /**
  * Fragment file into chunks using Web Workers
  * @param file - File to fragment
- * @param chunkSize - Size of each chunk in bytes (default: 5MB)
+ * @param chunkSize - Size of each chunk in bytes (default: auto-calculated)
  * @param onError - 错误回调函数
  * @param onProgress - 进度回调函数
  * @param cancelController - 取消控制器
+ * @param workerCount - Worker 数量（可选，默认自动计算）
+ * @param adaptiveChunkSize - 是否启用自适应分片大小（默认 true）
  * @returns Promise that resolves to array of chunk info
  */
 export function fragmentFile(
   file: File,
-  chunkSize: number = 5 * 1024 * 1024,
+  chunkSize?: number,
   onError?: (error: UploadError) => void,
   onProgress?: (progress: ProgressInfo) => void,
   cancelController?: CancelController,
+  workerCount?: number,
+  adaptiveChunkSize: boolean = true,
 ): Promise<ChunkInfo[]> {
   return new Promise((resolve, reject) => {
     // 验证文件
@@ -43,7 +49,9 @@ export function fragmentFile(
     let finishCount = 0
     let processedBytes = 0
     let hasError = false
-    const chunkCount = Math.ceil(file.size / chunkSize)
+    // 先使用传入的 chunkSize 计算初始分片数量
+    const initialChunkSize = chunkSize || 5 * 1024 * 1024
+    let chunkCount = Math.ceil(file.size / initialChunkSize)
     const controller = cancelController || createCancelController()
 
     // 如果没有分片，直接返回空数组
@@ -58,9 +66,29 @@ export function fragmentFile(
       return
     }
 
+    // 计算最优分片策略
+    let finalChunkSize = chunkSize
+    let finalWorkerCount = workerCount
+
+    if (adaptiveChunkSize && finalChunkSize === undefined) {
+      const strategy = calculateChunkStrategy(file.size, workerCount)
+      finalChunkSize = strategy.chunkSize
+      finalWorkerCount = strategy.workerCount
+    } else {
+      // 如果没有指定 chunkSize，使用默认值
+      finalChunkSize = finalChunkSize || 5 * 1024 * 1024
+      // 如果没有指定 workerCount，根据分片数量计算
+      if (finalWorkerCount === undefined) {
+        finalWorkerCount = calculateWorkerCount(chunkCount)
+      }
+    }
+
+    // 重新计算分片数量（如果分片大小改变了）
+    const finalChunkCount = Math.ceil(file.size / finalChunkSize)
+
     // 获取 Worker 池实例
-    const workerPool = getWorkerPool(THREAD_COUNT, 'work.js')
-    const workerChunkCount = Math.ceil(chunkCount / THREAD_COUNT)
+    const workerPool = getWorkerPool(finalWorkerCount, 'work.js')
+    const workerChunkCount = Math.ceil(finalChunkCount / finalWorkerCount)
     const tasks: Array<Promise<ChunkInfo[]>> = []
 
     // 更新进度
@@ -72,7 +100,7 @@ export function fragmentFile(
           total: file.size,
           percentage: Math.min(100, Math.round((loadedBytes / file.size) * 100)),
           processedChunks,
-          totalChunks: chunkCount,
+          totalChunks: finalChunkCount,
         }
         onProgress(progress)
       }
@@ -87,11 +115,11 @@ export function fragmentFile(
     }
 
     // 创建任务
-    for (let i = 0; i < THREAD_COUNT; i++) {
+    for (let i = 0; i < finalWorkerCount; i++) {
       const startIndex = i * workerChunkCount
       let endIndex = startIndex + workerChunkCount
-      if (endIndex > chunkCount) {
-        endIndex = chunkCount
+      if (endIndex > finalChunkCount) {
+        endIndex = finalChunkCount
       }
 
       // 如果 startIndex >= endIndex，跳过这个任务
@@ -109,7 +137,7 @@ export function fragmentFile(
 
         workerPool.submitTask({
           file,
-          CHUNK_SIZE: chunkSize,
+          CHUNK_SIZE: finalChunkSize,
           startIndex,
           endIndex,
           resolve: (chunks) => {
@@ -166,7 +194,7 @@ export function fragmentFile(
         })
 
         // 最终进度更新
-        updateProgress(chunkCount, file.size)
+        updateProgress(finalChunkCount, file.size)
         resolve(result)
       })
       .catch((error) => {
