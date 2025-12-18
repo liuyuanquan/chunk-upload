@@ -1,21 +1,30 @@
 /**
- * Chunk information
+ * 分片信息
  */
 export interface ChunkInfo {
+  /** 分片起始位置（字节） */
   start: number
+  /** 分片结束位置（字节） */
   end: number
+  /** 分片索引（从 0 开始） */
   index: number
+  /** 分片的 MD5 哈希值 */
   hash: string
 }
 
 /**
- * File information
+ * 文件信息
  */
 export interface FileInfo {
+  /** 文件名 */
   name: string
+  /** 文件 MIME 类型 */
   type: string
+  /** 文件大小（字节） */
   size: number
+  /** 文件最后修改时间戳 */
   lastModified: number
+  /** 文件的所有分片信息 */
   chunks: ChunkInfo[]
 }
 
@@ -93,20 +102,30 @@ export interface UploadError {
  * 进度信息
  */
 export interface ProgressInfo {
+  /** 当前处理的文件 */
   file: File
-  loaded: number // 已处理的字节数
-  total: number // 总字节数
-  percentage: number // 百分比 0-100
-  chunkIndex?: number // 当前分片索引
-  totalChunks?: number // 总分片数
-  processedChunks?: number // 已处理分片数
+  /** 已处理的字节数 */
+  loaded: number
+  /** 总字节数 */
+  total: number
+  /** 进度百分比（0-100） */
+  percentage: number
+  /** 当前分片索引 */
+  chunkIndex?: number
+  /** 总分片数 */
+  totalChunks?: number
+  /** 已处理分片数 */
+  processedChunks?: number
 }
 
 /**
  * 取消控制器
+ * 用于取消正在进行的文件处理操作
  */
 export interface CancelController {
+  /** 取消操作 */
   cancel: () => void
+  /** 检查是否已取消 */
   isCancelled: () => boolean
 }
 
@@ -114,18 +133,26 @@ export interface CancelController {
  * 重试配置
  */
 export interface RetryConfig {
-  maxRetries?: number // 最大重试次数，默认 3
-  retryDelay?: number // 重试延迟（毫秒），默认 1000
-  retryDelayMultiplier?: number // 重试延迟倍数（指数退避），默认 2
+  /** 最大重试次数，默认 3 */
+  maxRetries?: number
+  /** 重试延迟（毫秒），默认 1000 */
+  retryDelay?: number
+  /** 重试延迟倍数（指数退避），默认 2 */
+  retryDelayMultiplier?: number
 }
 
 /**
  * 文件验证配置
  */
 export interface FileValidationConfig {
-  allowedTypes?: string[] // 允许的文件类型（MIME type）
-  blockedTypes?: string[] // 禁止的文件类型
-  maxSize?: number // 最大文件大小（字节）
-  minSize?: number // 最小文件大小（字节）
-  validate?: (file: File) => boolean | string // 自定义验证函数，返回 true 或错误消息
+  /** 允许的文件类型（MIME type），支持通配符如 'image/*' */
+  allowedTypes?: string[]
+  /** 禁止的文件类型（MIME type），支持通配符如 'image/*' */
+  blockedTypes?: string[]
+  /** 最大文件大小（字节） */
+  maxSize?: number
+  /** 最小文件大小（字节） */
+  minSize?: number
+  /** 自定义验证函数，返回 true 表示通过，返回字符串表示错误消息 */
+  validate?: (file: File) => boolean | string
 }
