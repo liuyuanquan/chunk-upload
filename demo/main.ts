@@ -163,7 +163,7 @@ function startProcessing() {
 
   const options = {
     validation: {
-      maxSize: 500 * 1024 * 1024, // 500MB
+      maxSize: 2 * 1024 * 1024 * 1024, // 2GB
     },
     onProgress: (progress: ProgressInfo) => {
       updateProgress(progress.file, progress)
