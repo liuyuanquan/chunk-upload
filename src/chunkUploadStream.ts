@@ -90,22 +90,6 @@ async function processFilesStream(
 /**
  * Chunk upload function - immediate callback mode
  * Each chunk triggers callback immediately after processing
- *
- * @example
- * ```typescript
- * // 使用选择器
- * const controller = chunkUploadStream('#file-input', {
- *   callback: (chunk) => console.log(chunk)
- * })
- *
- * // 使用 File 对象
- * await chunkUploadStream(file, {
- *   callback: (chunk) => console.log(chunk)
- * })
- *
- * // 使用 FileList
- * await chunkUploadStream(fileList, options)
- * ```
  */
 export function chunkUploadStream(
   selector: string,

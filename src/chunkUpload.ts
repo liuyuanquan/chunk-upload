@@ -136,22 +136,6 @@ async function processFiles(
 /**
  * Chunk upload function - batch callback mode
  * All chunks of a file are processed before callback
- *
- * @example
- * ```typescript
- * // 使用选择器
- * const controller = chunkUpload('#file-input', {
- *   onProgress: (progress) => console.log(progress.percentage)
- * })
- *
- * // 使用 File 对象
- * const result = await chunkUpload(file, {
- *   onProgress: (progress) => console.log(progress.percentage)
- * })
- *
- * // 使用 FileList
- * const result = await chunkUpload(fileList, options)
- * ```
  */
 export function chunkUpload(
   selector: string,
