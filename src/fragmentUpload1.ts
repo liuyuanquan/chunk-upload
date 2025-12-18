@@ -1,4 +1,4 @@
-import type { FragmentUpload1Options } from './types'
+import type { FragmentUpload1Options, UploadError } from './types'
 import { fragmentFile1 } from './fragmentFile1'
 
 /**
@@ -11,15 +11,29 @@ export function fragmentUpload1(
 ): void {
   const el = document.querySelector(selector) as HTMLInputElement
   if (!el) {
-    throw new Error(`Element not found: ${selector}`)
+    throw new Error(`元素未找到: ${selector}`)
   }
 
-  const { callback, chunkSize } = options || {}
+  const { callback, chunkSize, onError } = options || {}
 
   el.onchange = async () => {
     const files = el.files ? Array.from(el.files) : []
+    if (files.length === 0) return
+
     for (const file of files) {
-      fragmentFile1(file, chunkSize, callback)
+      try {
+        await fragmentFile1(file, chunkSize, callback, onError)
+      } catch (error) {
+        const uploadError: UploadError = {
+          type: error instanceof Error && 'type' in error
+            ? (error as UploadError).type
+            : 'WORKER_ERROR' as any,
+          message: error instanceof Error ? error.message : String(error),
+          file,
+          originalError: error instanceof Error ? error : undefined,
+        }
+        onError?.(uploadError)
+      }
     }
   }
 }

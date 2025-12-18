@@ -27,6 +27,7 @@ export interface FragmentUploadOptions {
   lastCallback?: (filesInfo: FileInfo[]) => void
   splitCallback?: (fileInfo: FileInfo) => void
   chunkSize?: number
+  onError?: (error: UploadError) => void
 }
 
 /**
@@ -35,4 +36,27 @@ export interface FragmentUploadOptions {
 export interface FragmentUpload1Options {
   chunkSize?: number
   callback?: (chunk: ChunkInfo & { isDone: boolean }) => void
+  onError?: (error: UploadError) => void
+}
+
+/**
+ * 错误类型枚举
+ */
+export enum ChunkUploadError {
+  FILE_READ_ERROR = 'FILE_READ_ERROR',
+  WORKER_ERROR = 'WORKER_ERROR',
+  HASH_ERROR = 'HASH_ERROR',
+  INVALID_FILE = 'INVALID_FILE',
+  WORKER_LOAD_ERROR = 'WORKER_LOAD_ERROR',
+}
+
+/**
+ * 上传错误信息
+ */
+export interface UploadError {
+  type: ChunkUploadError
+  message: string
+  file?: File
+  chunkIndex?: number
+  originalError?: Error
 }
