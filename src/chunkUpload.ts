@@ -134,8 +134,12 @@ async function processFiles(
 }
 
 /**
- * Chunk upload function - batch callback mode
- * All chunks of a file are processed before callback
+ * 文件分片上传函数 - 批量回调模式
+ * 文件的所有分片处理完成后才触发回调
+ * 
+ * @param input - 输入：选择器字符串、File 对象、FileList 或 File 数组
+ * @param options - 配置选项
+ * @returns 如果输入是选择器字符串，返回取消控制器；否则返回 Promise<FileInfo[]>
  */
 export function chunkUpload(
   selector: string,

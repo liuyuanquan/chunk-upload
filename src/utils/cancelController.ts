@@ -1,7 +1,3 @@
-/**
- * 取消控制器
- */
-
 import type { CancelController } from '../types'
 
 /**
