@@ -9,21 +9,40 @@
  * @returns Worker 文件的 URL
  */
 export function getWorkerUrl(workerFileName: string = 'work.js'): URL {
-  // 开发环境（Vite）：使用源文件
-  if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV) {
-    // 将 .js 替换为 .ts
-    const sourceFileName = workerFileName.replace(/\.js$/, '.ts')
-    const url = new URL(`./${sourceFileName}`, import.meta.url)
-    console.log('[Worker URL] 开发模式:', url.href)
-    return url
-  }
+  try {
+    // 开发环境（Vite）：使用源文件
+    if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV) {
+      // 将 .js 替换为 .ts
+      const sourceFileName = workerFileName.replace(/\.js$/, '.ts')
+      // workerUrl.ts 在 src/utils/ 目录下，work.ts 在 src/ 目录下
+      // 所以需要向上两级到项目根目录，然后进入 src/
+      const url = new URL(`../${sourceFileName}`, import.meta.url)
+      console.log('[Worker URL] 开发模式:', {
+        href: url.href,
+        sourceFileName,
+        importMetaUrl: import.meta.url,
+      })
+      return url
+    }
 
-  // 生产环境：使用构建后的文件
-  // 对于 npm 包用户，worker 文件应该在 dist 目录下
-  // 这里使用相对路径，假设 worker 文件和主文件在同一目录
-  const url = new URL(`./${workerFileName}`, import.meta.url)
-  console.log('[Worker URL] 生产模式:', url.href)
-  return url
+    // 生产环境：使用构建后的文件
+    const url = new URL(`../${workerFileName}`, import.meta.url)
+    console.log('[Worker URL] 生产模式:', {
+      href: url.href,
+      workerFileName,
+      importMetaUrl: import.meta.url,
+    })
+    return url
+  } catch (error) {
+    console.error('[Worker URL] 解析失败:', {
+      error,
+      workerFileName,
+      importMetaUrl: import.meta.url,
+    })
+    // 如果 URL 解析失败，尝试使用字符串路径
+    const fallbackUrl = workerFileName.replace(/\.js$/, '.ts')
+    throw new Error(`无法解析 Worker URL: ${fallbackUrl}. 错误: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 /**
