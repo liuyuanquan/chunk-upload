@@ -1,6 +1,6 @@
 import {
-  fragmentUpload,
-  fragmentUpload1,
+  chunkUpload,
+  chunkUploadStream,
   type FileInfo,
   type ProgressInfo,
   type UploadError,
@@ -18,7 +18,7 @@ const errorContainer = document.getElementById('error-container')!
 const stats = document.getElementById('stats')!
 
 // 状态
-let cancelController: ReturnType<typeof fragmentUpload> | null = null
+let cancelController: ReturnType<typeof chunkUpload> | null = null
 let currentFiles: File[] = []
 let fileProgressMap = new Map<string, ProgressInfo>()
 let fileResultsMap = new Map<string, FileInfo>()
@@ -175,7 +175,7 @@ function startProcessing() {
 
   if (currentMode === 'batch') {
     // 批量回调模式
-    cancelController = fragmentUpload(files, {
+    cancelController = chunkUpload(files, {
       ...options,
       perCallback: (fileInfo) => {
         displayFileResult(fileInfo)
@@ -187,7 +187,7 @@ function startProcessing() {
     }) as any
   } else {
     // 立即回调模式
-    cancelController = fragmentUpload1(files, {
+    cancelController = chunkUploadStream(files, {
       ...options,
       callback: (chunk) => {
         console.log('分片完成:', chunk)
@@ -222,13 +222,13 @@ async function createTestFileAndTest() {
 
     console.log('创建测试文件:', testFile.name, `大小: ${(testFile.size / 1024 / 1024).toFixed(2)} MB`)
 
-    // 使用 fragmentUpload 处理测试文件
-    const { fragmentUpload } = await import('@xumi/chunk-upload-lib')
+    // 使用 chunkUpload 处理测试文件
+    const { chunkUpload } = await import('@xumi/chunk-upload-lib')
     
     const startTime = Date.now()
     console.log('开始处理测试文件...')
 
-    const result = await fragmentUpload([testFile], {
+    const result = await chunkUpload([testFile], {
       onProgress: (progress) => {
         updateProgress(progress.file, progress)
         console.log(`进度: ${progress.percentage}%`)

@@ -4,14 +4,14 @@ import type {
   CancelController,
 } from './types'
 import { ChunkUploadError } from './types'
-import { fragmentFile1 } from './fragmentFile1'
+import { chunkFileStream } from './chunkFileStream'
 import { validateFile } from './utils/fileValidator'
 import { createCancelController } from './utils/cancelController'
 
 /**
  * 处理文件列表（内部函数）
  */
-async function processFiles1(
+async function processFilesStream(
   files: File[],
   options: FragmentUpload1Options,
   cancelController: CancelController,
@@ -43,7 +43,7 @@ async function processFiles1(
         }
       }
 
-        await fragmentFile1(
+        await chunkFileStream(
           file,
           chunkSize,
           callback,
@@ -88,38 +88,38 @@ async function processFiles1(
 }
 
 /**
- * Fragment upload function - immediate callback mode
+ * Chunk upload function - immediate callback mode
  * Each chunk triggers callback immediately after processing
  *
  * @example
  * ```typescript
  * // 使用选择器
- * const controller = fragmentUpload1('#file-input', {
+ * const controller = chunkUploadStream('#file-input', {
  *   callback: (chunk) => console.log(chunk)
  * })
  *
  * // 使用 File 对象
- * await fragmentUpload1(file, {
+ * await chunkUploadStream(file, {
  *   callback: (chunk) => console.log(chunk)
  * })
  *
  * // 使用 FileList
- * await fragmentUpload1(fileList, options)
+ * await chunkUploadStream(fileList, options)
  * ```
  */
-export function fragmentUpload1(
+export function chunkUploadStream(
   selector: string,
   options?: FragmentUpload1Options,
 ): CancelController
-export function fragmentUpload1(
+export function chunkUploadStream(
   file: File,
   options?: FragmentUpload1Options,
 ): Promise<void>
-export function fragmentUpload1(
+export function chunkUploadStream(
   files: FileList | File[],
   options?: FragmentUpload1Options,
 ): Promise<void>
-export function fragmentUpload1(
+export function chunkUploadStream(
   input: string | File | FileList | File[],
   options?: FragmentUpload1Options,
 ): CancelController | Promise<void> {
@@ -137,9 +137,9 @@ export function fragmentUpload1(
       if (files.length === 0) return
 
       try {
-        await processFiles1(files, options || {}, cancelController)
+        await processFilesStream(files, options || {}, cancelController)
       } catch (error) {
-        // 错误已在 processFiles1 中处理
+        // 错误已在 processFilesStream 中处理
       }
     }
 
@@ -151,5 +151,5 @@ export function fragmentUpload1(
     ? [input]
     : Array.from(input)
 
-  return processFiles1(files, options || {}, cancelController)
+  return processFilesStream(files, options || {}, cancelController)
 }

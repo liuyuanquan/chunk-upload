@@ -55,7 +55,7 @@ export interface FragmentUploadOptions {
 }
 
 /**
- * Options for fragmentUpload1
+ * Options for chunkUploadStream
  */
 export interface FragmentUpload1Options {
   /** 分片大小（字节），默认根据文件大小自动计算 */

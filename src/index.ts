@@ -4,28 +4,28 @@
  *
  * @example
  * ```typescript
- * import { fragmentUpload, fragmentUpload1 } from '@xumi/chunk-upload-lib'
+ * import { chunkUpload, chunkUploadStream } from '@xumi/chunk-upload-lib'
  *
  * // 方式1: 使用选择器（事件监听模式，返回取消控制器）
- * const controller = fragmentUpload('#file-input', {
+ * const controller = chunkUpload('#file-input', {
  *   onProgress: (progress) => console.log(progress.percentage)
  * })
  * controller.cancel() // 取消操作
  *
  * // 方式2: 使用 File 对象（Promise 模式）
- * const result = await fragmentUpload(file, {
+ * const result = await chunkUpload(file, {
  *   onProgress: (progress) => console.log(progress.percentage)
  * })
  *
  * // 方式3: 使用 FileList
- * const result = await fragmentUpload(fileList, options)
+ * const result = await chunkUpload(fileList, options)
  * ```
  */
 
 export * from './types'
-export { fragmentUpload } from './fragmentUpload'
-export { fragmentUpload1 } from './fragmentUpload1'
-export { fragmentFile } from './fragmentFile'
+export { chunkUpload } from './chunkUpload'
+export { chunkUploadStream } from './chunkUploadStream'
+export { chunkFile } from './chunkFile'
 export { clearHashCache, getCacheSize } from './createChunk'
 export { getWorkerPool, resetWorkerPool, WorkerPool } from './utils/workerPool'
 export { validateFile } from './utils/fileValidator'

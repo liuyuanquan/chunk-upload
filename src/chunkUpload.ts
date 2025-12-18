@@ -5,7 +5,7 @@ import type {
   CancelController,
 } from './types'
 import { ChunkUploadError } from './types'
-import { fragmentFile } from './fragmentFile'
+import { chunkFile } from './chunkFile'
 import { validateFile } from './utils/fileValidator'
 import { createCancelController } from './utils/cancelController'
 import { withRetry } from './utils/retry'
@@ -52,7 +52,7 @@ async function processFiles(
 
         // 使用重试机制处理文件
         const processFile = async () => {
-          return await fragmentFile(
+          return await chunkFile(
             file,
             chunkSize,
             (error) => {
@@ -134,38 +134,38 @@ async function processFiles(
 }
 
 /**
- * Fragment upload function - batch callback mode
+ * Chunk upload function - batch callback mode
  * All chunks of a file are processed before callback
  *
  * @example
  * ```typescript
  * // 使用选择器
- * const controller = fragmentUpload('#file-input', {
+ * const controller = chunkUpload('#file-input', {
  *   onProgress: (progress) => console.log(progress.percentage)
  * })
  *
  * // 使用 File 对象
- * const result = await fragmentUpload(file, {
+ * const result = await chunkUpload(file, {
  *   onProgress: (progress) => console.log(progress.percentage)
  * })
  *
  * // 使用 FileList
- * const result = await fragmentUpload(fileList, options)
+ * const result = await chunkUpload(fileList, options)
  * ```
  */
-export function fragmentUpload(
+export function chunkUpload(
   selector: string,
   options?: FragmentUploadOptions,
 ): CancelController
-export function fragmentUpload(
+export function chunkUpload(
   file: File,
   options?: FragmentUploadOptions,
 ): Promise<FileInfo[]>
-export function fragmentUpload(
+export function chunkUpload(
   files: FileList | File[],
   options?: FragmentUploadOptions,
 ): Promise<FileInfo[]>
-export function fragmentUpload(
+export function chunkUpload(
   input: string | File | FileList | File[],
   options?: FragmentUploadOptions,
 ): CancelController | Promise<FileInfo[]> {

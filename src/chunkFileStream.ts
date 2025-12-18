@@ -11,8 +11,8 @@ import { withRetry } from './utils/retry'
 import { calculateChunkStrategy } from './utils/chunkStrategy'
 
 /**
- * Fragment file into chunks with immediate callback
- * @param file - File to fragment
+ * Chunk file into chunks with immediate callback
+ * @param file - File to chunk
  * @param chunkSize - Size of each chunk in bytes (default: auto-calculated)
  * @param callback - Callback function for each chunk
  * @param onError - 错误回调函数
@@ -21,7 +21,7 @@ import { calculateChunkStrategy } from './utils/chunkStrategy'
  * @param retryConfig - 重试配置
  * @param adaptiveChunkSize - 是否启用自适应分片大小（默认 true）
  */
-export async function fragmentFile1(
+export async function chunkFileStream(
   file: File,
   chunkSize?: number,
   callback?: FragmentUpload1Options['callback'],

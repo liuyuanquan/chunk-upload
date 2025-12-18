@@ -13,8 +13,8 @@ import {
 } from './utils/chunkStrategy'
 
 /**
- * Fragment file into chunks using Web Workers
- * @param file - File to fragment
+ * Chunk file into chunks using Web Workers
+ * @param file - File to chunk
  * @param chunkSize - Size of each chunk in bytes (default: auto-calculated)
  * @param onError - 错误回调函数
  * @param onProgress - 进度回调函数
@@ -23,7 +23,7 @@ import {
  * @param adaptiveChunkSize - 是否启用自适应分片大小（默认 true）
  * @returns Promise that resolves to array of chunk info
  */
-export function fragmentFile(
+export function chunkFile(
   file: File,
   chunkSize?: number,
   onError?: (error: UploadError) => void,

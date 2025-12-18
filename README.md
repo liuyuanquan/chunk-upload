@@ -30,10 +30,10 @@ yarn add @xumi/chunk-upload-lib
 ### 基础用法
 
 ```typescript
-import { fragmentUpload } from '@xumi/chunk-upload-lib'
+import { chunkUpload } from '@xumi/chunk-upload-lib'
 
 // 方式1: 使用选择器（事件监听模式）
-const controller = fragmentUpload('#file-input', {
+const controller = chunkUpload('#file-input', {
   onProgress: (progress) => {
     console.log(`进度: ${progress.percentage}%`)
   },
@@ -46,7 +46,7 @@ const controller = fragmentUpload('#file-input', {
 controller.cancel()
 
 // 方式2: 使用 File 对象（Promise 模式）
-const result = await fragmentUpload(file, {
+const result = await chunkUpload(file, {
   onProgress: (progress) => {
     console.log(`进度: ${progress.percentage}%`)
   },
@@ -57,10 +57,10 @@ console.log(result) // FileInfo[]
 ### 立即回调模式
 
 ```typescript
-import { fragmentUpload1 } from '@xumi/chunk-upload-lib'
+import { chunkUploadStream } from '@xumi/chunk-upload-lib'
 
 // 每个分片处理完成后立即回调
-const controller = fragmentUpload1('#file-input', {
+const controller = chunkUploadStream('#file-input', {
   callback: (chunk) => {
     console.log('分片完成:', chunk)
   },
@@ -72,26 +72,26 @@ const controller = fragmentUpload1('#file-input', {
 
 ## 📖 API 文档
 
-### fragmentUpload
+### chunkUpload
 
 批量回调模式：文件的所有分片处理完成后才回调。
 
 **函数签名：**
 ```typescript
 // 选择器模式（返回 CancelController）
-function fragmentUpload(
+function chunkUpload(
   selector: string,
   options?: FragmentUploadOptions
 ): CancelController
 
 // File 对象模式（返回 Promise）
-function fragmentUpload(
+function chunkUpload(
   file: File,
   options?: FragmentUploadOptions
 ): Promise<FileInfo[]>
 
 // FileList/File[] 模式（返回 Promise）
-function fragmentUpload(
+function chunkUpload(
   files: FileList | File[],
   options?: FragmentUploadOptions
 ): Promise<FileInfo[]>
@@ -109,26 +109,26 @@ function fragmentUpload(
 - `retry?: RetryConfig` - 重试配置
 - `validation?: FileValidationConfig` - 文件验证配置
 
-### fragmentUpload1
+### chunkUploadStream
 
 立即回调模式：每个分片处理完成后立即回调。
 
 **函数签名：**
 ```typescript
 // 选择器模式（返回 CancelController）
-function fragmentUpload1(
+function chunkUploadStream(
   selector: string,
   options?: FragmentUpload1Options
 ): CancelController
 
 // File 对象模式（返回 Promise）
-function fragmentUpload1(
+function chunkUploadStream(
   file: File,
   options?: FragmentUpload1Options
 ): Promise<void>
 
 // FileList/File[] 模式（返回 Promise）
-function fragmentUpload1(
+function chunkUploadStream(
   files: FileList | File[],
   options?: FragmentUpload1Options
 ): Promise<void>
@@ -149,9 +149,9 @@ function fragmentUpload1(
 ### 带进度条和错误处理
 
 ```typescript
-import { fragmentUpload } from '@xumi/chunk-upload-lib'
+import { chunkUpload } from '@xumi/chunk-upload-lib'
 
-const controller = fragmentUpload('#file-input', {
+const controller = chunkUpload('#file-input', {
   // 文件验证
   validation: {
     allowedTypes: ['image/*', 'video/*'],
@@ -200,11 +200,11 @@ document.getElementById('cancel-btn')?.addEventListener('click', () => {
 ### 使用 Promise 模式
 
 ```typescript
-import { fragmentUpload } from '@xumi/chunk-upload-lib'
+import { chunkUpload } from '@xumi/chunk-upload-lib'
 
 async function handleFileUpload(file: File) {
   try {
-    const result = await fragmentUpload(file, {
+    const result = await chunkUpload(file, {
       onProgress: (progress) => {
         console.log(`进度: ${progress.percentage}%`)
       },
