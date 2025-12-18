@@ -4,6 +4,7 @@ import type {
   UploadError,
   CancelController,
 } from './types'
+import { ChunkUploadError } from './types'
 import { fragmentFile } from './fragmentFile'
 import { validateFile } from './utils/fileValidator'
 import { createCancelController } from './utils/cancelController'
@@ -101,11 +102,26 @@ async function processFiles(
         throw error
       }
 
+      // 确保错误消息是字符串
+      let errorMessage = '处理失败'
+      let errorType: ChunkUploadError = ChunkUploadError.WORKER_ERROR
+      
+      if (error && typeof error === 'object' && 'type' in error) {
+        // 如果已经是 UploadError 对象
+        const uploadErr = error as UploadError
+        errorType = uploadErr.type
+        errorMessage = uploadErr.message || errorMessage
+      } else if (error instanceof Error) {
+        errorMessage = error.message || errorMessage
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else {
+        errorMessage = String(error)
+      }
+      
       const uploadError: UploadError = {
-        type: error instanceof Error && 'type' in error
-          ? (error as UploadError).type
-          : 'WORKER_ERROR' as any,
-        message: error instanceof Error ? error.message : String(error),
+        type: errorType,
+        message: errorMessage,
         file,
         originalError: error instanceof Error ? error : undefined,
       }

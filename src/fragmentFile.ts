@@ -159,15 +159,30 @@ export function fragmentFile(
               return
             }
 
+            // 确保错误消息是字符串
+            let errorMessage = 'Worker 处理失败'
+            if (error instanceof Error) {
+              errorMessage = error.message || errorMessage
+            } else if (typeof error === 'string') {
+              errorMessage = error
+            } else if (error && typeof error === 'object') {
+              // 如果是 UploadError 对象，提取 message
+              if ('message' in error && typeof error.message === 'string') {
+                errorMessage = error.message
+              } else {
+                errorMessage = JSON.stringify(error)
+              }
+            }
+
             const uploadError: UploadError = {
               type: ChunkUploadError.WORKER_ERROR,
-              message: error.message,
+              message: errorMessage,
               file,
               chunkIndex: startIndex,
-              originalError: error,
+              originalError: error instanceof Error ? error : undefined,
             }
             handleError(uploadError)
-            taskReject(error)
+            taskReject(error instanceof Error ? error : new Error(errorMessage))
           },
         })
       })

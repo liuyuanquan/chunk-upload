@@ -85,7 +85,20 @@ export class WorkerPool {
       if (data && typeof data === 'object' && 'success' in data) {
         if (!data.success) {
           // Worker 返回错误
-          const error = new Error(data.error?.message || 'Worker 处理失败')
+          const errorData = data.error
+          let errorMessage = 'Worker 处理失败'
+          
+          if (errorData) {
+            if (typeof errorData === 'string') {
+              errorMessage = errorData
+            } else if (typeof errorData === 'object' && 'message' in errorData) {
+              errorMessage = String(errorData.message || 'Worker 处理失败')
+            } else {
+              errorMessage = JSON.stringify(errorData)
+            }
+          }
+          
+          const error = new Error(errorMessage)
           task.reject(error)
         } else {
           // Worker 成功返回数据

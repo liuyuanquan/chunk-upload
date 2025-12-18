@@ -24,14 +24,30 @@ onmessage = async (e: MessageEvent<WorkerMessage>) => {
     postMessage({ success: true, data: results })
   } catch (error) {
     // 发送错误信息回主线程
-    const uploadError: UploadError = error instanceof Error && 'type' in error
-      ? (error as UploadError)
-      : {
-          type: 'WORKER_ERROR' as any,
-          message: error instanceof Error ? error.message : String(error),
-          file,
-          originalError: error instanceof Error ? error : undefined,
-        }
+    let uploadError: UploadError
+    
+    if (error && typeof error === 'object' && 'type' in error) {
+      // 如果已经是 UploadError 对象
+      uploadError = error as UploadError
+    } else {
+      // 创建新的 UploadError
+      let errorMessage = 'Worker 处理失败'
+      if (error instanceof Error) {
+        errorMessage = error.message || errorMessage
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else {
+        errorMessage = String(error)
+      }
+      
+      uploadError = {
+        type: 'WORKER_ERROR' as any,
+        message: errorMessage,
+        file,
+        originalError: error instanceof Error ? error : undefined,
+      }
+    }
+    
     postMessage({ success: false, error: uploadError })
   }
 }
