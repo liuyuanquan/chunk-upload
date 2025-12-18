@@ -13,17 +13,17 @@ const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024 // 50MB
 /**
  * 优化的哈希计算（适用于大文件）
  * 使用增量计算，避免一次性加载整个分片到内存
- * 
+ *
  * @param fileBuffer - 文件缓冲区
  * @returns 哈希值
  */
 export function calculateHashOptimized(fileBuffer: ArrayBuffer): string {
-  const spark = new SparkMD5.ArrayBuffer()
-  
-  // 对于大文件，可以考虑分块处理
-  // 但 SparkMD5 已经内部优化，这里主要是预留接口
-  spark.append(fileBuffer)
-  return spark.end()
+	const spark = new SparkMD5.ArrayBuffer()
+
+	// 对于大文件，可以考虑分块处理
+	// 但 SparkMD5 已经内部优化，这里主要是预留接口
+	spark.append(fileBuffer)
+	return spark.end()
 }
 
 /**
@@ -32,7 +32,7 @@ export function calculateHashOptimized(fileBuffer: ArrayBuffer): string {
  * @returns 是否应该使用优化策略
  */
 export function shouldUseOptimizedHash(bufferSize: number): boolean {
-  return bufferSize > LARGE_FILE_THRESHOLD
+	return bufferSize > LARGE_FILE_THRESHOLD
 }
 
 /**
@@ -42,19 +42,19 @@ export function shouldUseOptimizedHash(bufferSize: number): boolean {
  * @returns 哈希值
  */
 export function calculateHash(
-  fileBuffer: ArrayBuffer,
-  useOptimization?: boolean,
+	fileBuffer: ArrayBuffer,
+	useOptimization?: boolean,
 ): string {
-  if (useOptimization === undefined) {
-    useOptimization = shouldUseOptimizedHash(fileBuffer.byteLength)
-  }
+	if (useOptimization === undefined) {
+		useOptimization = shouldUseOptimizedHash(fileBuffer.byteLength)
+	}
 
-  if (useOptimization) {
-    return calculateHashOptimized(fileBuffer)
-  }
+	if (useOptimization) {
+		return calculateHashOptimized(fileBuffer)
+	}
 
-  // 标准计算方式
-  const spark = new SparkMD5.ArrayBuffer()
-  spark.append(fileBuffer)
-  return spark.end()
+	// 标准计算方式
+	const spark = new SparkMD5.ArrayBuffer()
+	spark.append(fileBuffer)
+	return spark.end()
 }
