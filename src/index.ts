@@ -4,7 +4,7 @@
  *
  * @example
  * ```typescript
- * import { chunkUpload, chunkUploadStream } from '@xumi/chunk-upload-lib'
+ * import { chunkUpload, chunkUploadStream } from '@xumi/chunk-upload'
  *
  * // 方式1: 使用选择器（事件监听模式，返回取消控制器）
  * const controller = chunkUpload('#file-input', {

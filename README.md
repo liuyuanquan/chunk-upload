@@ -18,11 +18,11 @@
 ## 📦 安装
 
 ```bash
-npm install @xumi/chunk-upload-lib
+npm install @xumi/chunk-upload
 # 或
-pnpm add @xumi/chunk-upload-lib
+pnpm add @xumi/chunk-upload
 # 或
-yarn add @xumi/chunk-upload-lib
+yarn add @xumi/chunk-upload
 ```
 
 ## 🚀 快速开始
@@ -30,7 +30,7 @@ yarn add @xumi/chunk-upload-lib
 ### 基础用法
 
 ```typescript
-import { chunkUpload } from '@xumi/chunk-upload-lib'
+import { chunkUpload } from '@xumi/chunk-upload'
 
 // 方式1: 使用选择器（事件监听模式）
 const controller = chunkUpload('#file-input', {
@@ -57,7 +57,7 @@ console.log(result) // FileInfo[]
 ### 立即回调模式
 
 ```typescript
-import { chunkUploadStream } from '@xumi/chunk-upload-lib'
+import { chunkUploadStream } from '@xumi/chunk-upload'
 
 // 每个分片处理完成后立即回调
 const controller = chunkUploadStream('#file-input', {
@@ -149,7 +149,7 @@ function chunkUploadStream(
 ### 带进度条和错误处理
 
 ```typescript
-import { chunkUpload } from '@xumi/chunk-upload-lib'
+import { chunkUpload } from '@xumi/chunk-upload'
 
 const controller = chunkUpload('#file-input', {
   // 文件验证
@@ -200,7 +200,7 @@ document.getElementById('cancel-btn')?.addEventListener('click', () => {
 ### 使用 Promise 模式
 
 ```typescript
-import { chunkUpload } from '@xumi/chunk-upload-lib'
+import { chunkUpload } from '@xumi/chunk-upload'
 
 async function handleFileUpload(file: File) {
   try {
@@ -324,7 +324,7 @@ retry: {
 ### 清理哈希缓存
 
 ```typescript
-import { clearHashCache, getCacheSize } from '@xumi/chunk-upload-lib'
+import { clearHashCache, getCacheSize } from '@xumi/chunk-upload'
 
 // 清理所有缓存
 clearHashCache()
@@ -336,7 +336,7 @@ const size = getCacheSize()
 ### Worker 池管理
 
 ```typescript
-import { getWorkerPool, resetWorkerPool } from '@xumi/chunk-upload-lib'
+import { getWorkerPool, resetWorkerPool } from '@xumi/chunk-upload'
 
 // 获取 Worker 池实例
 const pool = getWorkerPool(4, 'work.js')

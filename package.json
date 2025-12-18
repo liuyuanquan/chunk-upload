@@ -1,6 +1,6 @@
 {
-	"name": "@xumi/chunk-upload-lib",
-	"version": "0.1.0",
+	"name": "@xumi/chunk-upload",
+	"version": "1.0.0",
 	"description": "A simple and fast file chunk upload library using Web Workers",
 	"type": "module",
 	"main": "./dist/index.cjs",

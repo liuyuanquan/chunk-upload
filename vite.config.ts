@@ -11,7 +11,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@xumi/chunk-upload-lib": resolve(__dirname, "./src"),
+			"@xumi/chunk-upload": resolve(__dirname, "./src"),
 		},
 	},
 	publicDir: "../",

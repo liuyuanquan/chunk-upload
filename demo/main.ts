@@ -4,7 +4,7 @@ import {
   type FileInfo,
   type ProgressInfo,
   type UploadError,
-} from '@xumi/chunk-upload-lib'
+} from '@xumi/chunk-upload'
 
 // DOM 元素
 const fileInput = document.getElementById('file-input') as HTMLInputElement
@@ -223,7 +223,7 @@ async function createTestFileAndTest() {
     console.log('创建测试文件:', testFile.name, `大小: ${(testFile.size / 1024 / 1024).toFixed(2)} MB`)
 
     // 使用 chunkUpload 处理测试文件
-    const { chunkUpload } = await import('@xumi/chunk-upload-lib')
+    const { chunkUpload } = await import('@xumi/chunk-upload')
     
     const startTime = Date.now()
     console.log('开始处理测试文件...')
