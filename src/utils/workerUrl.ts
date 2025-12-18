@@ -9,39 +9,48 @@
  * @returns Worker 文件的 URL
  */
 export function getWorkerUrl(workerFileName: string = 'work.js'): URL {
+  // 检查 import.meta.url 是否可用
+  if (typeof import.meta === 'undefined' || !import.meta.url) {
+    throw new Error('import.meta.url 不可用，无法解析 Worker URL')
+  }
+
+  const importMetaUrl = import.meta.url
+  console.log('[Worker URL] import.meta.url:', importMetaUrl)
+
   try {
     // 开发环境（Vite）：使用源文件
     if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV) {
       // 将 .js 替换为 .ts
       const sourceFileName = workerFileName.replace(/\.js$/, '.ts')
       // workerUrl.ts 在 src/utils/ 目录下，work.ts 在 src/ 目录下
-      // 所以需要向上两级到项目根目录，然后进入 src/
-      const url = new URL(`../${sourceFileName}`, import.meta.url)
+      // 所以需要向上到 src/ 目录
+      const url = new URL(`../${sourceFileName}`, importMetaUrl)
       console.log('[Worker URL] 开发模式:', {
         href: url.href,
         sourceFileName,
-        importMetaUrl: import.meta.url,
+        importMetaUrl,
       })
       return url
     }
 
     // 生产环境：使用构建后的文件
-    const url = new URL(`../${workerFileName}`, import.meta.url)
+    const url = new URL(`../${workerFileName}`, importMetaUrl)
     console.log('[Worker URL] 生产模式:', {
       href: url.href,
       workerFileName,
-      importMetaUrl: import.meta.url,
+      importMetaUrl,
     })
     return url
   } catch (error) {
     console.error('[Worker URL] 解析失败:', {
-      error,
+      error: error instanceof Error ? error.message : String(error),
       workerFileName,
-      importMetaUrl: import.meta.url,
+      importMetaUrl,
+      errorStack: error instanceof Error ? error.stack : undefined,
     })
-    // 如果 URL 解析失败，尝试使用字符串路径
-    const fallbackUrl = workerFileName.replace(/\.js$/, '.ts')
-    throw new Error(`无法解析 Worker URL: ${fallbackUrl}. 错误: ${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `无法解析 Worker URL: ${workerFileName}. 错误: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
 
