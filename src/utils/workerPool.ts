@@ -60,14 +60,17 @@ export class WorkerPool {
 
         // 设置 Worker 错误处理
         worker.onerror = (error) => {
-          console.error('[WorkerPool] Worker 错误详情:', {
-            message: error.message,
-            filename: error.filename,
-            lineno: error.lineno,
-            colno: error.colno,
+          const errorDetails = {
+            message: error.message || '未知错误',
+            filename: error.filename || '未知文件',
+            lineno: error.lineno || '未知行号',
+            colno: error.colno || '未知列号',
             error: error.error,
             workerFileName: this.workerFileName,
-          })
+            errorType: error.error?.constructor?.name || typeof error.error,
+            errorString: error.error?.toString(),
+          }
+          console.error('[WorkerPool] Worker 错误详情:', errorDetails)
           this.handleWorkerError(workerInstance, error)
         }
         
@@ -161,26 +164,54 @@ export class WorkerPool {
     if (task) {
       // 构建详细的错误消息
       let errorMessage = 'Worker 错误'
+      const errorParts: string[] = []
       
       if (error.message) {
-        errorMessage += `: ${error.message}`
-      } else if (error.filename) {
-        errorMessage += `: 文件 ${error.filename}`
-      } else if (error.lineno) {
-        errorMessage += `: 第 ${error.lineno} 行`
-      } else {
-        errorMessage += ': 未知错误'
+        errorParts.push(`消息: ${error.message}`)
+      }
+      
+      if (error.filename) {
+        errorParts.push(`文件: ${error.filename}`)
+      }
+      
+      if (error.lineno !== undefined) {
+        errorParts.push(`行号: ${error.lineno}`)
+      }
+      
+      if (error.colno !== undefined) {
+        errorParts.push(`列号: ${error.colno}`)
       }
       
       // 添加更多调试信息
       if (error.error) {
         const errorObj = error.error
         if (errorObj instanceof Error) {
-          errorMessage += ` (${errorObj.name}: ${errorObj.message})`
+          errorParts.push(`错误类型: ${errorObj.name}`)
+          errorParts.push(`错误消息: ${errorObj.message}`)
+          if (errorObj.stack) {
+            errorParts.push(`堆栈: ${errorObj.stack.split('\n').slice(0, 3).join('\n')}`)
+          }
         } else if (typeof errorObj === 'string') {
-          errorMessage += ` (${errorObj})`
+          errorParts.push(`错误内容: ${errorObj}`)
+        } else {
+          errorParts.push(`错误对象: ${JSON.stringify(errorObj)}`)
         }
       }
+      
+      if (errorParts.length > 0) {
+        errorMessage += ': ' + errorParts.join(', ')
+      } else {
+        errorMessage += ': 未知错误（无错误详情）'
+      }
+      
+      console.error('[WorkerPool] 处理 Worker 错误:', {
+        errorMessage,
+        taskFileName: task.file?.name,
+        taskFileSize: task.file?.size,
+        chunkSize: task.CHUNK_SIZE,
+        startIndex: task.startIndex,
+        endIndex: task.endIndex,
+      })
       
       task.reject(new Error(errorMessage))
       workerInstance.isBusy = false
