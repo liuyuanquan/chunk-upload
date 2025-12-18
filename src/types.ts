@@ -23,26 +23,40 @@ export interface FileInfo {
  * Options for fragmentUpload
  */
 export interface FragmentUploadOptions {
+  /** 单个文件完成时的回调（每个文件分片完成后调用） */
   perCallback?: (fileInfo: FileInfo & { isDone: boolean }) => void
+  /** 所有文件完成时的回调（所有文件处理完成后调用一次） */
   lastCallback?: (filesInfo: FileInfo[]) => void
+  /** 文件分片完成时的回调（文件的所有分片处理完成后调用） */
   splitCallback?: (fileInfo: FileInfo) => void
+  /** 分片大小（字节），默认 5MB */
   chunkSize?: number
+  /** 错误回调 */
   onError?: (error: UploadError) => void
-  onProgress?: (progress: ProgressInfo) => void // 进度回调
-  retry?: RetryConfig // 重试配置
-  validation?: FileValidationConfig // 文件验证配置
+  /** 进度回调 */
+  onProgress?: (progress: ProgressInfo) => void
+  /** 重试配置 */
+  retry?: RetryConfig
+  /** 文件验证配置 */
+  validation?: FileValidationConfig
 }
 
 /**
  * Options for fragmentUpload1
  */
 export interface FragmentUpload1Options {
+  /** 分片大小（字节），默认 5MB */
   chunkSize?: number
+  /** 每个分片完成时的回调（每个分片处理完成后立即调用） */
   callback?: (chunk: ChunkInfo & { isDone: boolean }) => void
+  /** 错误回调 */
   onError?: (error: UploadError) => void
-  onProgress?: (progress: ProgressInfo) => void // 进度回调
-  retry?: RetryConfig // 重试配置
-  validation?: FileValidationConfig // 文件验证配置
+  /** 进度回调 */
+  onProgress?: (progress: ProgressInfo) => void
+  /** 重试配置 */
+  retry?: RetryConfig
+  /** 文件验证配置 */
+  validation?: FileValidationConfig
 }
 
 /**
