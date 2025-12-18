@@ -50,20 +50,20 @@ async function processFiles(
         }
       }
 
-        // 使用重试机制处理文件
-        const processFile = async () => {
-          return await chunkFile(
-            file,
-            chunkSize,
-            (error) => {
-              onError?.(error)
-            },
-            onProgress,
-            cancelController,
-            workerCount,
-            adaptiveChunkSize,
-          )
-        }
+      // 使用重试机制处理文件
+      const processFile = async () => {
+        return await chunkFile(
+          file,
+          chunkSize,
+          (error) => {
+            onError?.(error)
+          },
+          onProgress,
+          cancelController,
+          workerCount,
+          adaptiveChunkSize,
+        )
+      }
 
       const chunks = retry
         ? await withRetry(processFile, retry)

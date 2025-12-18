@@ -1,7 +1,3 @@
-/**
- * 文件验证工具
- */
-
 import type { FileValidationConfig, UploadError } from '../types'
 import { ChunkUploadError } from '../types'
 
