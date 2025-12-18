@@ -358,6 +358,10 @@ npm run test:coverage
 npm run test:ui
 ```
 
+## 📐 架构文档
+
+详细的架构设计和工作流程说明，请查看 [ARCHITECTURE.md](./ARCHITECTURE.md)。
+
 ## 📄 License
 
 MIT
