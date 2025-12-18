@@ -25,6 +25,7 @@
 export * from './types'
 export { fragmentUpload } from './fragmentUpload'
 export { fragmentUpload1 } from './fragmentUpload1'
+export { fragmentFile } from './fragmentFile'
 export { clearHashCache, getCacheSize } from './createChunk'
 export { getWorkerPool, resetWorkerPool, WorkerPool } from './utils/workerPool'
 export { validateFile } from './utils/fileValidator'
@@ -35,3 +36,4 @@ export {
   calculateWorkerCount,
 } from './utils/chunkStrategy'
 export { calculateHash, shouldUseOptimizedHash } from './utils/hashOptimizer'
+export { getWorkerUrl, createWorker } from './utils/workerUrl'

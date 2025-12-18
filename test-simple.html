@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简单 Worker 测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .log {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 4px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+    }
+    .log-item {
+      margin-bottom: 0.25rem;
+    }
+    .log-item.error { color: red; }
+    .log-item.success { color: green; }
+    .log-item.info { color: blue; }
+    button {
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worker 简单测试</h1>
+  <button onclick="testWorker()">测试 Worker</button>
+  <button onclick="testFileChunk()">测试文件分片</button>
+  <button onclick="clearLog()">清空日志</button>
+  <div id="log" class="log"></div>
+
+  <script type="module">
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log')
+      const time = new Date().toLocaleTimeString()
+      const item = document.createElement('div')
+      item.className = `log-item ${type}`
+      item.textContent = `[${time}] ${message}`
+      logDiv.appendChild(item)
+      logDiv.scrollTop = logDiv.scrollHeight
+      console.log(`[${type}]`, message)
+    }
+
+    // 测试 Worker 基本功能
+    window.testWorker = async function() {
+      log('开始测试 Worker...', 'info')
+      
+      try {
+        // 创建测试文件
+        const size = 1024 * 1024 // 1MB
+        const content = new Uint8Array(size)
+        for (let i = 0; i < size; i++) {
+          content[i] = i % 256
+        }
+        const blob = new Blob([content], { type: 'application/octet-stream' })
+        const file = new File([blob], 'test.bin', {
+          type: 'application/octet-stream',
+          lastModified: Date.now(),
+        })
+        
+        log(`创建测试文件: ${file.name}, 大小: ${(file.size / 1024).toFixed(2)} KB`, 'success')
+
+        // 动态导入模块
+        const { createWorker, getWorkerUrl } = await import('./src/utils/workerUrl.ts')
+        
+        const workerUrl = getWorkerUrl('work.js')
+        log(`Worker URL: ${workerUrl.href}`, 'info')
+
+        const worker = createWorker('work.js')
+        log('Worker 创建成功', 'success')
+
+        worker.onmessage = (e) => {
+          log(`收到 Worker 消息: ${JSON.stringify(e.data)}`, 'success')
+          worker.terminate()
+        }
+
+        worker.onerror = (error) => {
+          log(`Worker 错误: ${error.message || '未知错误'}`, 'error')
+          log(`文件名: ${error.filename || '未知'}`, 'error')
+          log(`行号: ${error.lineno || '未知'}`, 'error')
+          if (error.error) {
+            log(`错误对象: ${JSON.stringify(error.error)}`, 'error')
+          }
+        }
+
+        // 等待 Worker 加载
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        log('尝试发送 File 对象到 Worker...', 'info')
+        
+        try {
+          worker.postMessage({
+            file: file,
+            CHUNK_SIZE: 256 * 1024, // 256KB
+            startIndex: 0,
+            endIndex: 1,
+          })
+          log('File 对象发送成功', 'success')
+        } catch (postError) {
+          log(`发送失败: ${postError.message}`, 'error')
+          log(`错误堆栈: ${postError.stack}`, 'error')
+          worker.terminate()
+        }
+      } catch (error) {
+        log(`测试失败: ${error.message}`, 'error')
+        log(`错误堆栈: ${error.stack}`, 'error')
+      }
+    }
+
+    // 测试文件分片
+    window.testFileChunk = async function() {
+      log('开始测试文件分片...', 'info')
+      
+      try {
+        // 创建测试文件
+        const size = 5 * 1024 * 1024 // 5MB
+        const content = new Uint8Array(size)
+        for (let i = 0; i < size; i++) {
+          content[i] = i % 256
+        }
+        const blob = new Blob([content], { type: 'application/octet-stream' })
+        const file = new File([blob], 'test-5mb.bin', {
+          type: 'application/octet-stream',
+          lastModified: Date.now(),
+        })
+        
+        log(`创建测试文件: ${file.name}, 大小: ${(file.size / 1024 / 1024).toFixed(2)} MB`, 'success')
+
+        const { fragmentFile } = await import('./src/fragmentFile.ts')
+        
+        const startTime = Date.now()
+        
+        const chunks = await fragmentFile(
+          file,
+          1024 * 1024, // 1MB chunks
+          (error) => {
+            log(`错误回调: ${error.message}`, 'error')
+            log(`错误类型: ${error.type}`, 'error')
+            if (error.originalError) {
+              log(`原始错误: ${error.originalError.message}`, 'error')
+            }
+          },
+          (progress) => {
+            log(`进度: ${progress.percentage}% (${progress.processedChunks}/${progress.totalChunks} 分片)`, 'info')
+          }
+        )
+
+        const endTime = Date.now()
+        const duration = ((endTime - startTime) / 1000).toFixed(2)
+
+        log(`✅ 分片完成: ${chunks.length} 个分片，耗时 ${duration} 秒`, 'success')
+        log(`第一个分片: index=${chunks[0]?.index}, hash=${chunks[0]?.hash.substring(0, 16)}...`, 'success')
+      } catch (error) {
+        log(`❌ 分片失败: ${error.message}`, 'error')
+        log(`错误堆栈: ${error.stack}`, 'error')
+      }
+    }
+
+    window.clearLog = function() {
+      document.getElementById('log').innerHTML = ''
+    }
+
+    log('测试页面已加载，点击按钮开始测试', 'info')
+  </script>
+</body>
+</html>
