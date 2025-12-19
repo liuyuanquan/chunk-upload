@@ -11,15 +11,16 @@ import { withRetry } from './utils/retry'
 import { calculateChunkStrategy } from './utils/chunkStrategy'
 
 /**
- * Chunk file into chunks with immediate callback
- * @param file - File to chunk
- * @param chunkSize - Size of each chunk in bytes (default: auto-calculated)
- * @param callback - Callback function for each chunk
- * @param onError - 错误回调函数
- * @param onProgress - 进度回调函数
+ * 文件分片处理（立即回调模式）
+ * 每个分片处理完成后立即触发回调
+ * @param file - 要处理的文件对象
+ * @param chunkSize - 分片大小（字节），未指定时自动计算
+ * @param callback - 每个分片完成时的回调
+ * @param onError - 错误回调
+ * @param onProgress - 进度回调
  * @param cancelController - 取消控制器
  * @param retryConfig - 重试配置
- * @param adaptiveChunkSize - 是否启用自适应分片大小（默认 true）
+ * @param adaptiveChunkSize - 是否启用自适应分片大小，默认 true
  */
 export async function chunkFileStream(
 	file: File,

@@ -11,7 +11,7 @@ import { createCancelController } from './utils/cancelController'
 import { withRetry } from './utils/retry'
 
 /**
- * 处理文件列表（内部函数）
+ * 处理文件列表
  */
 async function processFiles(
 	files: File[],
@@ -134,12 +134,11 @@ async function processFiles(
 }
 
 /**
- * 文件分片上传函数 - 批量回调模式
+ * 文件分片上传（批量回调模式）
  * 文件的所有分片处理完成后才触发回调
- *
- * @param input - 输入：选择器字符串、File 对象、FileList 或 File 数组
+ * @param input - 选择器字符串、File 对象、FileList 或 File 数组
  * @param options - 配置选项
- * @returns 如果输入是选择器字符串，返回取消控制器；否则返回 Promise<FileInfo[]>
+ * @returns 选择器模式返回取消控制器，否则返回 Promise<FileInfo[]>
  */
 export function chunkUpload(
 	selector: string,

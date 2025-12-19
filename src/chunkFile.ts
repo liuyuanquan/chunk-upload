@@ -14,18 +14,14 @@ import {
 
 /**
  * 将文件分片处理（使用 Web Workers 并行处理）
- *
- * 该函数会将文件分割成多个分片，并使用 Worker 池并行处理每个分片。
- * 每个分片会计算 SHA-256 哈希值，最终返回所有分片的信息。
- *
  * @param file - 要处理的文件对象
- * @param chunkSize - 每个分片的大小（字节），未指定时根据文件大小自动计算
- * @param onError - 错误回调函数，当处理过程中发生错误时调用
- * @param onProgress - 进度回调函数，实时更新处理进度
- * @param cancelController - 取消控制器，用于取消正在进行的操作
- * @param workerCount - Worker 数量，未指定时根据文件大小和分片数量自动计算
- * @param adaptiveChunkSize - 是否启用自适应分片大小，默认 true（根据文件大小自动调整分片大小和 Worker 数量）
- * @returns Promise，解析为分片信息数组
+ * @param chunkSize - 分片大小（字节），未指定时自动计算
+ * @param onError - 错误回调
+ * @param onProgress - 进度回调
+ * @param cancelController - 取消控制器
+ * @param workerCount - Worker 数量，未指定时自动计算
+ * @param adaptiveChunkSize - 是否启用自适应分片大小，默认 true
+ * @returns Promise<ChunkInfo[]> 分片信息数组
  */
 export function chunkFile(
 	file: File,
@@ -105,11 +101,6 @@ export function chunkFile(
 		// 存储所有任务的 Promise
 		const tasks: Array<Promise<ChunkInfo[]>> = []
 
-		/**
-		 * 更新处理进度
-		 * @param processedChunks - 已处理的分片数量
-		 * @param loadedBytes - 已处理的字节数
-		 */
 		const updateProgress = (processedChunks: number, loadedBytes: number) => {
 			if (onProgress) {
 				const progress: ProgressInfo = {
@@ -127,11 +118,6 @@ export function chunkFile(
 			}
 		}
 
-		/**
-		 * 统一错误处理函数
-		 * 确保错误只被处理一次，避免重复回调
-		 * @param error - 上传错误对象
-		 */
 		const handleError = (error: UploadError) => {
 			if (hasError) return
 			hasError = true

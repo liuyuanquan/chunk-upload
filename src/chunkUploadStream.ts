@@ -9,7 +9,7 @@ import { validateFile } from './utils/fileValidator'
 import { createCancelController } from './utils/cancelController'
 
 /**
- * 处理文件列表（内部函数）
+ * 处理文件列表
  */
 async function processFilesStream(
 	files: File[],
@@ -88,8 +88,8 @@ async function processFilesStream(
 }
 
 /**
- * Chunk upload function - immediate callback mode
- * Each chunk triggers callback immediately after processing
+ * 文件分片上传（立即回调模式）
+ * 每个分片处理完成后立即触发回调
  */
 export function chunkUploadStream(
 	selector: string,
