@@ -1,4 +1,9 @@
 /**
+ * Worker URL 解析工具
+ * 统一处理开发和生产环境下的 Worker 路径
+ */
+
+/**
  * 创建 Worker 实例
  * 使用 Vite 推荐的方式：在 new Worker() 中直接使用 new URL()
  * @param workerFileName - Worker 文件名，默认 'work.js'
