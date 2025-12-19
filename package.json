@@ -1,6 +1,6 @@
 {
   "name": "@xumi/chunk-upload",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "一个简单快速的文件分片上传库，使用 Web Workers 进行并行处理",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -43,16 +43,16 @@
     "frontend",
     "file-handling"
   ],
-  "author": "",
+  "author": "刘源泉 <522703297@qq.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/liuyuanquan/chunk-upload.git"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/liuyuanquan/chunk-upload/issues"
   },
-  "homepage": "",
+  "homepage": "https://github.com/liuyuanquan/chunk-upload#readme",
   "engines": {
     "node": ">=16.0.0"
   },
@@ -60,14 +60,12 @@
     "@commitlint/config-conventional": "^20.0.0",
     "@types/node": "^24.10.1",
     "@vitest/ui": "^1.0.0",
-    "commitlint": "20.1.0",
+    "commitlint": "^20.1.0",
+    "jsdom": "^24.0.0",
     "prettier": "^3.7.4",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vite": "^4.0.0",
     "vitest": "^1.0.0"
-  },
-  "dependencies": {
-    "workerpool": "^10.0.1"
   }
 }
