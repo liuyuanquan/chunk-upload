@@ -156,10 +156,7 @@ function clearAll() {
 // 开始处理
 function startProcessing() {
 	const files = Array.from(fileInput.files || [])
-	if (files.length === 0) {
-		alert('请选择文件')
-		return
-	}
+	if (files.length === 0) return
 
 	clearAll()
 	currentFiles = files
@@ -193,6 +190,7 @@ function startProcessing() {
 			...options,
 			callback: chunk => {
 				console.log('分片完成:', chunk)
+				// 可以在这里显示每个分片的信息
 			},
 		}) as any
 	}
@@ -219,9 +217,6 @@ async function createTestFileAndTest() {
 			testFile.name,
 			`大小: ${(testFile.size / 1024 / 1024).toFixed(2)} MB`,
 		)
-
-		// 使用 chunkUpload 处理测试文件
-		const { chunkUpload } = await import('@xumi/chunk-upload')
 
 		const startTime = Date.now()
 		console.log('开始处理测试文件...')
