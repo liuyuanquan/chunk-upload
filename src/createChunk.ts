@@ -1,4 +1,3 @@
-import SparkMD5 from 'spark-md5'
 import type { ChunkInfo, UploadError } from './types'
 import { ChunkUploadError } from './types'
 import { calculateHash } from './utils/hashOptimizer'
