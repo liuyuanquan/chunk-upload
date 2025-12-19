@@ -23,11 +23,11 @@ function cleanupCache(): void {
 }
 
 /**
- * Create a chunk from file with hash calculation
+ * Create a chunk from file with SHA-256 hash calculation
  * @param file - File to chunk
  * @param index - Chunk index
  * @param chunkSize - Size of each chunk in bytes
- * @returns Promise that resolves to chunk info
+ * @returns Promise that resolves to chunk info with SHA-256 hash
  */
 export function createChunk(
 	file: File,
@@ -64,38 +64,42 @@ export function createChunk(
 					return
 				}
 
-				let hash: string
-
 				// 检查缓存
 				if (hashMap.has(fileBuffer)) {
-					hash = hashMap.get(fileBuffer)!
+					const hash = hashMap.get(fileBuffer)!
+					resolve({
+						start,
+						end,
+						index,
+						hash,
+					})
 				} else {
-					// 计算哈希（使用优化策略）
-					try {
-						hash = calculateHash(fileBuffer)
-						hashMap.set(fileBuffer, hash)
+					// 计算哈希（使用 Web Crypto API，异步）
+					calculateHash(fileBuffer)
+						.then(hash => {
+							hashMap.set(fileBuffer, hash)
 
-						// 清理缓存
-						cleanupCache()
-					} catch (error) {
-						const uploadError: UploadError = {
-							type: ChunkUploadError.HASH_ERROR,
-							message: `计算哈希失败: ${error instanceof Error ? error.message : String(error)}`,
-							file,
-							chunkIndex: index,
-							originalError: error instanceof Error ? error : undefined,
-						}
-						reject(uploadError)
-						return
-					}
+							// 清理缓存
+							cleanupCache()
+
+							resolve({
+								start,
+								end,
+								index,
+								hash,
+							})
+						})
+						.catch(error => {
+							const uploadError: UploadError = {
+								type: ChunkUploadError.HASH_ERROR,
+								message: `计算哈希失败: ${error instanceof Error ? error.message : String(error)}`,
+								file,
+								chunkIndex: index,
+								originalError: error instanceof Error ? error : undefined,
+							}
+							reject(uploadError)
+						})
 				}
-
-				resolve({
-					start,
-					end,
-					index,
-					hash,
-				})
 			} catch (error) {
 				const uploadError: UploadError = {
 					type: ChunkUploadError.FILE_READ_ERROR,

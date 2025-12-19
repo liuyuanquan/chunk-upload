@@ -1,60 +1,69 @@
 /**
- * 哈希计算优化工具
- * 优化大文件的哈希计算性能
+ * 哈希计算工具
+ * 使用 Web Crypto API 计算 SHA-256 哈希值
  */
 
-import SparkMD5 from 'spark-md5'
-
 /**
- * 大文件哈希计算阈值（超过此大小使用优化策略）
+ * 将 ArrayBuffer 转换为十六进制字符串
+ * @param buffer - ArrayBuffer 对象
+ * @returns 十六进制字符串
  */
-const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024 // 50MB
+function arrayBufferToHex(buffer: ArrayBuffer): string {
+	const bytes = new Uint8Array(buffer)
+	return Array.from(bytes)
+		.map(byte => byte.toString(16).padStart(2, '0'))
+		.join('')
+}
 
 /**
- * 优化的哈希计算（适用于大文件）
- * 使用增量计算，避免一次性加载整个分片到内存
- *
+ * 使用 Web Crypto API 计算 SHA-256 哈希值
  * @param fileBuffer - 文件缓冲区
- * @returns 哈希值
+ * @returns Promise<string> 返回十六进制格式的 SHA-256 哈希值
  */
-export function calculateHashOptimized(fileBuffer: ArrayBuffer): string {
-	const spark = new SparkMD5.ArrayBuffer()
+async function calculateSHA256(fileBuffer: ArrayBuffer): Promise<string> {
+	// 检查 Web Crypto API 是否可用
+	if (typeof crypto === 'undefined' || !crypto.subtle) {
+		throw new Error('Web Crypto API 不可用，无法计算哈希值')
+	}
 
-	// 对于大文件，可以考虑分块处理
-	// 但 SparkMD5 已经内部优化，这里主要是预留接口
-	spark.append(fileBuffer)
-	return spark.end()
+	// 使用 Web Crypto API 计算 SHA-256
+	const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer)
+	
+	// 转换为十六进制字符串
+	return arrayBufferToHex(hashBuffer)
+}
+
+/**
+ * 计算文件分片的 SHA-256 哈希值
+ * @param fileBuffer - 文件缓冲区
+ * @param useOptimization - 是否使用优化策略（保留参数以兼容现有代码，当前未使用）
+ * @returns Promise<string> 返回十六进制格式的 SHA-256 哈希值
+ */
+export async function calculateHash(
+	fileBuffer: ArrayBuffer,
+	useOptimization?: boolean,
+): Promise<string> {
+	return calculateSHA256(fileBuffer)
 }
 
 /**
  * 检查是否应该使用优化的哈希计算
  * @param bufferSize - 缓冲区大小
- * @returns 是否应该使用优化策略
+ * @returns 是否应该使用优化策略（保留函数以兼容现有代码，当前始终返回 false）
+ * @deprecated Web Crypto API 已经内部优化，此函数不再需要
  */
 export function shouldUseOptimizedHash(bufferSize: number): boolean {
-	return bufferSize > LARGE_FILE_THRESHOLD
+	return false
 }
 
 /**
- * 计算文件分片的哈希值（带优化）
+ * 优化的哈希计算（适用于大文件）
  * @param fileBuffer - 文件缓冲区
- * @param useOptimization - 是否使用优化策略
- * @returns 哈希值
+ * @returns Promise<string> 返回十六进制格式的 SHA-256 哈希值
+ * @deprecated 使用 calculateHash 代替，Web Crypto API 已经内部优化
  */
-export function calculateHash(
+export async function calculateHashOptimized(
 	fileBuffer: ArrayBuffer,
-	useOptimization?: boolean,
-): string {
-	if (useOptimization === undefined) {
-		useOptimization = shouldUseOptimizedHash(fileBuffer.byteLength)
-	}
-
-	if (useOptimization) {
-		return calculateHashOptimized(fileBuffer)
-	}
-
-	// 标准计算方式
-	const spark = new SparkMD5.ArrayBuffer()
-	spark.append(fileBuffer)
-	return spark.end()
+): Promise<string> {
+	return calculateSHA256(fileBuffer)
 }

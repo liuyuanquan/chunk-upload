@@ -8,7 +8,7 @@ export interface ChunkInfo {
 	end: number
 	/** 分片索引（从 0 开始） */
 	index: number
-	/** 分片的 MD5 哈希值 */
+	/** 分片的 SHA-256 哈希值（十六进制格式） */
 	hash: string
 }
 

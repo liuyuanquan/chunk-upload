@@ -43,7 +43,7 @@
 │                     核心处理层                                 │
 │  createChunk                                                 │
 │  - 文件分片读取                                               │
-│  - MD5 哈希计算                                               │
+│  - SHA-256 哈希计算（Web Crypto API）                        │
 │  - LRU 缓存管理                                               │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -116,13 +116,13 @@
 
 **职责**：
 - 读取文件分片数据
-- 计算 MD5 哈希值
+- 计算 SHA-256 哈希值（使用 Web Crypto API）
 - 管理哈希缓存（LRU 策略）
 
 **关键优化**：
 - **LRU 缓存**：限制缓存大小为 100 个条目，避免内存泄漏
 - **FileReader API**：使用 `readAsArrayBuffer` 读取文件分片
-- **SparkMD5**：使用优化的 MD5 计算库
+- **Web Crypto API**：使用浏览器原生的 SHA-256 哈希计算
 
 ### 6. 工具模块
 
@@ -183,7 +183,7 @@
     ↓
 每个 Worker 并行处理
     ├─→ 读取文件分片
-    ├─→ 计算 MD5 哈希
+    ├─→ 计算 SHA-256 哈希
     └─→ 返回 ChunkInfo
     ↓
 收集所有分片结果
@@ -246,7 +246,7 @@ Worker 收到消息
     1. 计算分片范围（start, end）
     2. 使用 FileReader 读取文件分片
     3. 检查哈希缓存
-    4. 如果未缓存，计算 MD5 哈希
+    4. 如果未缓存，计算 SHA-256 哈希
     5. 缓存哈希值（LRU）
     6. 返回 ChunkInfo
     ↓
@@ -487,5 +487,5 @@ File | FileList | File[] | string (selector)
 
 - [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)
 - [FileReader API](https://developer.mozilla.org/en-US/docs/Web/API/FileReader)
-- [SparkMD5](https://github.com/satazor/SparkMD5)
+- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) - 浏览器原生加密 API
 - [Vite Worker 文档](https://vitejs.dev/guide/features.html#web-workers)
