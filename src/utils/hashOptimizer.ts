@@ -81,8 +81,6 @@ async function calculateSHA256(fileBuffer: ArrayBuffer): Promise<string> {
  * - 返回标准的 SHA-256 哈希值（64 个十六进制字符）
  * 
  * @param fileBuffer - 文件分片的二进制数据（ArrayBuffer）
- * @param useOptimization - 是否使用优化策略（保留参数以兼容现有代码，当前未使用）
- *                          Web Crypto API 已经内部优化，此参数被忽略
  * @returns Promise<string> 返回 64 位十六进制字符串格式的 SHA-256 哈希值
  * 
  * @example
@@ -94,45 +92,7 @@ async function calculateSHA256(fileBuffer: ArrayBuffer): Promise<string> {
  */
 export async function calculateHash(
 	fileBuffer: ArrayBuffer,
-	useOptimization?: boolean,
 ): Promise<string> {
 	// Web Crypto API 已经内部优化，直接调用计算函数即可
-	return calculateSHA256(fileBuffer)
-}
-
-/**
- * 检查是否应该使用优化的哈希计算
- * 
- * 此函数保留用于向后兼容，但已不再需要。
- * Web Crypto API 内部已经进行了优化，包括：
- * - 硬件加速支持（如果可用）
- * - 高效的流式处理
- * - 内存管理优化
- * 
- * 因此，无论文件大小如何，都使用相同的计算方式即可。
- * 
- * @param bufferSize - 缓冲区大小（字节）
- * @returns 始终返回 false，因为 Web Crypto API 已经内部优化
- * @deprecated Web Crypto API 已经内部优化，此函数不再需要，保留仅为兼容性
- */
-export function shouldUseOptimizedHash(bufferSize: number): boolean {
-	return false
-}
-
-/**
- * 优化的哈希计算（适用于大文件）
- * 
- * 此函数保留用于向后兼容，但已不再需要。
- * Web Crypto API 内部已经进行了优化，无需区分大小文件。
- * 
- * 建议直接使用 `calculateHash()` 函数，它会自动使用最优的计算方式。
- * 
- * @param fileBuffer - 文件分片的二进制数据（ArrayBuffer）
- * @returns Promise<string> 返回 64 位十六进制字符串格式的 SHA-256 哈希值
- * @deprecated 使用 `calculateHash()` 代替，Web Crypto API 已经内部优化
- */
-export async function calculateHashOptimized(
-	fileBuffer: ArrayBuffer,
-): Promise<string> {
 	return calculateSHA256(fileBuffer)
 }
