@@ -8,9 +8,6 @@ import {
 
 // DOM 元素
 const fileInput = document.getElementById('file-input') as HTMLInputElement
-const startBtn = document.getElementById('start-btn') as HTMLButtonElement
-const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement
-const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement
 const progressSection = document.getElementById('progress-section')!
 const progressList = document.getElementById('progress-list')!
 const fileList = document.getElementById('file-list')!
@@ -149,7 +146,11 @@ function clearAll() {
 	progressSection.style.display = 'none'
 	stats.style.display = 'none'
 	fileInput.value = ''
-	cancelBtn.disabled = true
+	// 取消正在进行的操作
+	if (cancelController) {
+		cancelController.cancel()
+		cancelController = null
+	}
 }
 
 // 开始处理
@@ -162,7 +163,6 @@ function startProcessing() {
 
 	clearAll()
 	currentFiles = files
-	cancelBtn.disabled = false
 
 	const options = {
 		validation: {
@@ -185,7 +185,6 @@ function startProcessing() {
 			},
 			lastCallback: files => {
 				console.log('所有文件处理完成:', files)
-				cancelBtn.disabled = true
 			},
 		}) as any
 	} else {
@@ -199,14 +198,6 @@ function startProcessing() {
 	}
 }
 
-// 取消处理
-function cancelProcessing() {
-	if (cancelController) {
-		cancelController.cancel()
-		cancelBtn.disabled = true
-		console.log('操作已取消')
-	}
-}
 
 // 创建测试文件并测试
 async function createTestFileAndTest() {
@@ -283,9 +274,6 @@ function setStatus(
 }
 
 // 事件监听
-startBtn.addEventListener('click', startProcessing)
-cancelBtn.addEventListener('click', cancelProcessing)
-clearBtn.addEventListener('click', clearAll)
 document
 	.getElementById('test-btn')
 	?.addEventListener('click', createTestFileAndTest)

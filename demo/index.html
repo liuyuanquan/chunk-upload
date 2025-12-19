@@ -249,18 +249,16 @@
 					<input type="file" id="file-input" multiple />
 				</div>
 
-				<div class="controls">
-					<button class="btn-primary" id="start-btn">开始处理</button>
-					<button class="btn-danger" id="cancel-btn" disabled>取消</button>
-					<button class="btn-secondary" id="clear-btn">清空</button>
-					<button
-						class="btn-secondary"
-						id="test-btn"
-						style="background: #28a745"
-					>
-						创建测试文件并测试
-					</button>
-				</div>
+			<div class="controls">
+				<!-- 已移除开始处理按钮，选择文件后自动处理 -->
+				<button
+					class="btn-secondary"
+					id="test-btn"
+					style="background: #28a745"
+				>
+					创建测试文件并测试
+				</button>
+			</div>
 			</div>
 
 			<div class="progress-section" id="progress-section" style="display: none">
