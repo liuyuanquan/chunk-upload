@@ -1,11 +1,17 @@
+/**
+ * 文件验证工具
+ * 提供文件类型和大小验证功能，支持白名单、黑名单和自定义验证规则
+ */
+
 import type { FileValidationConfig, UploadError } from '../types'
 import { ChunkUploadError } from '../types'
 
 /**
- * 验证文件
- * @param file - 要验证的文件
- * @param config - 验证配置
- * @returns 验证通过返回 null，否则返回错误信息
+ * 验证文件是否符合配置要求
+ * 支持文件类型白名单/黑名单、大小限制和自定义验证
+ * @param file - 要验证的文件对象
+ * @param config - 验证配置（可选）
+ * @returns 验证失败返回错误对象，验证通过返回 null
  */
 export function validateFile(
 	file: File,
@@ -13,11 +19,10 @@ export function validateFile(
 ): UploadError | null {
 	if (!config) return null
 
-	// 验证文件类型
+	// 文件类型白名单验证
 	if (config.allowedTypes && config.allowedTypes.length > 0) {
 		const isAllowed = config.allowedTypes.some(type => {
 			if (type.includes('*')) {
-				// 支持通配符，如 'image/*'
 				const baseType = type.split('/')[0]
 				return file.type.startsWith(`${baseType}/`)
 			}
@@ -33,7 +38,7 @@ export function validateFile(
 		}
 	}
 
-	// 验证禁止的文件类型
+	// 文件类型黑名单验证
 	if (config.blockedTypes && config.blockedTypes.length > 0) {
 		const isBlocked = config.blockedTypes.some(type => {
 			if (type.includes('*')) {
@@ -52,7 +57,7 @@ export function validateFile(
 		}
 	}
 
-	// 验证文件大小
+	// 文件大小验证
 	if (config.maxSize !== undefined && file.size > config.maxSize) {
 		return {
 			type: ChunkUploadError.INVALID_FILE,
@@ -85,7 +90,9 @@ export function validateFile(
 }
 
 /**
- * 格式化文件大小
+ * 格式化文件大小为可读字符串
+ * @param bytes - 文件大小（字节）
+ * @returns 格式化后的文件大小字符串，例如 "1.5 MB"
  */
 function formatFileSize(bytes: number): string {
 	if (bytes === 0) return '0 B'

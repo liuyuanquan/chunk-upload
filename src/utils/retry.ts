@@ -1,5 +1,6 @@
 /**
- * 重试工具函数
+ * 重试工具
+ * 提供带指数退避的重试机制，用于处理可能失败的异步操作
  */
 
 import type { RetryConfig } from '../types'
@@ -11,10 +12,11 @@ const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
 }
 
 /**
- * 执行带重试的函数
- * @param fn - 要执行的函数
- * @param config - 重试配置
- * @returns Promise
+ * 执行带重试的异步函数
+ * 使用指数退避策略：每次重试延迟 = 上次延迟 × 倍数
+ * @param fn - 要执行的异步函数
+ * @param config - 重试配置（可选）
+ * @returns Promise 成功返回结果，失败抛出错误
  */
 export async function withRetry<T>(
 	fn: () => Promise<T>,
@@ -30,12 +32,10 @@ export async function withRetry<T>(
 		} catch (error) {
 			lastError = error
 
-			// 如果是最后一次尝试，直接抛出错误
 			if (attempt === retryConfig.maxRetries) {
 				throw error
 			}
 
-			// 等待后重试
 			await new Promise(resolve => setTimeout(resolve, delay))
 			delay *= retryConfig.retryDelayMultiplier
 		}
