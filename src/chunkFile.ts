@@ -58,8 +58,8 @@ export function chunkFile(
 		// 是否已发生错误
 		let hasError = false
 
-		// 计算初始分片数量（使用传入的 chunkSize 或默认值 5MB）
-		const initialChunkSize = chunkSize || 5 * 1024 * 1024
+		// 计算初始分片数量（使用传入的 chunkSize 或默认值 1MB）
+		const initialChunkSize = chunkSize || 1 * 1024 * 1024
 		let chunkCount = Math.ceil(file.size / initialChunkSize)
 		// 创建或使用传入的取消控制器
 		const controller = cancelController || createCancelController()
@@ -88,7 +88,7 @@ export function chunkFile(
 			finalWorkerCount = strategy.workerCount
 		} else {
 			// 手动模式：使用指定的分片大小或默认值
-			finalChunkSize = finalChunkSize || 5 * 1024 * 1024
+			finalChunkSize = finalChunkSize || 1 * 1024 * 1024
 			// 如果未指定 Worker 数量，根据分片数量计算
 			if (finalWorkerCount === undefined) {
 				finalWorkerCount = calculateWorkerCount(chunkCount)

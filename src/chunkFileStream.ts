@@ -48,7 +48,7 @@ export async function chunkFileStream(
 		const strategy = calculateChunkStrategy(file.size)
 		finalChunkSize = strategy.chunkSize
 	} else {
-		finalChunkSize = finalChunkSize || 5 * 1024 * 1024
+		finalChunkSize = finalChunkSize || 1 * 1024 * 1024
 	}
 
 	const chunkCount = Math.ceil(file.size / finalChunkSize)

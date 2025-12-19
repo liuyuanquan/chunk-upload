@@ -167,6 +167,7 @@ function startProcessing() {
 		},
 		onProgress: (progress: ProgressInfo) => {
 			updateProgress(progress.file, progress)
+			console.log(`进度: ${progress.percentage}%`)
 		},
 		onError: (error: UploadError) => {
 			displayError(error)
