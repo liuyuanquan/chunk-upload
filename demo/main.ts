@@ -1,284 +1,296 @@
 import {
-	chunkUpload,
-	chunkUploadStream,
-	type FileInfo,
-	type ProgressInfo,
-	type UploadError,
-} from '@xumi/chunk-upload'
+  chunkUpload,
+  chunkUploadStream,
+  type FileInfo,
+  type ProgressInfo,
+  type UploadError,
+  type CancelController,
+} from "@xumi/chunk-upload";
 
 // DOM 元素
-const fileInput = document.getElementById('file-input') as HTMLInputElement
-const progressSection = document.getElementById('progress-section')!
-const progressList = document.getElementById('progress-list')!
-const fileList = document.getElementById('file-list')!
-const errorContainer = document.getElementById('error-container')!
-const stats = document.getElementById('stats')!
+const fileInput = document.getElementById("file-input") as HTMLInputElement;
+const progressSection = document.getElementById("progress-section")!;
+const progressList = document.getElementById("progress-list")!;
+const fileList = document.getElementById("file-list")!;
+const errorContainer = document.getElementById("error-container")!;
+const stats = document.getElementById("stats")!;
 
 // 状态
-let cancelController: ReturnType<typeof chunkUpload> | null = null
-let currentFiles: File[] = []
-let fileProgressMap = new Map<string, ProgressInfo>()
-let fileResultsMap = new Map<string, FileInfo>()
+let cancelController: CancelController | null = null;
+let currentFiles: File[] = [];
+let fileProgressMap = new Map<string, ProgressInfo>();
+let fileResultsMap = new Map<string, FileInfo>();
 
 // 模式选择
 const modeRadios =
-	document.querySelectorAll<HTMLInputElement>('input[name="mode"]')
-let currentMode: 'batch' | 'immediate' = 'batch'
+  document.querySelectorAll<HTMLInputElement>('input[name="mode"]');
+let currentMode: "batch" | "immediate" = "batch";
 
-modeRadios.forEach(radio => {
-	radio.addEventListener('change', () => {
-		currentMode = radio.value as 'batch' | 'immediate'
-	})
-})
+modeRadios.forEach((radio) => {
+  radio.addEventListener("change", () => {
+    currentMode = radio.value as "batch" | "immediate";
+  });
+});
 
 // 更新统计信息
 function updateStats() {
-	const totalFiles = currentFiles.length
-	const processedFiles = fileResultsMap.size
-	const totalChunks = Array.from(fileResultsMap.values()).reduce(
-		(sum, file) => sum + file.chunks.length,
-		0,
-	)
-	const totalSize = currentFiles.reduce((sum, file) => sum + file.size, 0)
+  const totalFiles = currentFiles.length;
+  const processedFiles = fileResultsMap.size;
+  const totalChunks = Array.from(fileResultsMap.values()).reduce(
+    (sum, file) => sum + file.chunks.length,
+    0
+  );
+  const totalSize = currentFiles.reduce((sum, file) => sum + file.size, 0);
 
-	document.getElementById('total-files')!.textContent = String(totalFiles)
-	document.getElementById('processed-files')!.textContent =
-		String(processedFiles)
-	document.getElementById('total-chunks')!.textContent = String(totalChunks)
-	document.getElementById('total-size')!.textContent =
-		(totalSize / 1024 / 1024).toFixed(2) + ' MB'
+  document.getElementById("total-files")!.textContent = String(totalFiles);
+  document.getElementById("processed-files")!.textContent =
+    String(processedFiles);
+  document.getElementById("total-chunks")!.textContent = String(totalChunks);
+  document.getElementById("total-size")!.textContent =
+    (totalSize / 1024 / 1024).toFixed(2) + " MB";
 
-	if (totalFiles > 0) {
-		stats.style.display = 'grid'
-	}
+  if (totalFiles > 0) {
+    stats.style.display = "grid";
+  }
 }
 
 // 更新进度显示
 function updateProgress(file: File, progress: ProgressInfo) {
-	fileProgressMap.set(file.name, progress)
+  fileProgressMap.set(file.name, progress);
 
-	const progressItem =
-		document.getElementById(`progress-${file.name}`) || createProgressItem(file)
-	const progressBar = progressItem.querySelector('.progress-bar') as HTMLElement
-	const progressText = progressItem.querySelector(
-		'.progress-text',
-	) as HTMLElement
+  const progressItem =
+    document.getElementById(`progress-${file.name}`) ||
+    createProgressItem(file);
+  const progressBar = progressItem.querySelector(
+    ".progress-bar"
+  ) as HTMLElement;
+  const progressText = progressItem.querySelector(
+    ".progress-text"
+  ) as HTMLElement;
 
-	progressBar.style.width = `${progress.percentage}%`
-	progressBar.textContent = `${progress.percentage}%`
-	progressText.textContent = `已处理: ${formatBytes(progress.loaded)} / ${formatBytes(progress.total)} (${progress.processedChunks || 0}/${progress.totalChunks || 0} 分片)`
+  progressBar.style.width = `${progress.percentage}%`;
+  progressBar.textContent = `${progress.percentage}%`;
+  progressText.textContent = `已处理: ${formatBytes(progress.loaded)} / ${formatBytes(progress.total)} (${progress.processedChunks || 0}/${progress.totalChunks || 0} 分片)`;
 
-	progressSection.style.display = 'block'
+  progressSection.style.display = "block";
 }
 
 // 创建进度项
 function createProgressItem(file: File): HTMLElement {
-	const item = document.createElement('div')
-	item.className = 'progress-item'
-	item.id = `progress-${file.name}`
-	item.innerHTML = `
+  const item = document.createElement("div");
+  item.className = "progress-item";
+  item.id = `progress-${file.name}`;
+  item.innerHTML = `
     <h3>${file.name}</h3>
     <div class="progress-bar-wrapper">
       <div class="progress-bar" style="width: 0%">0%</div>
     </div>
     <div class="progress-text">准备中...</div>
-  `
-	progressList.appendChild(item)
-	return item
+  `;
+  progressList.appendChild(item);
+  return item;
 }
 
 // 显示文件结果
 function displayFileResult(fileInfo: FileInfo) {
-	fileResultsMap.set(fileInfo.name, fileInfo)
+  fileResultsMap.set(fileInfo.name, fileInfo);
 
-	const item = document.createElement('div')
-	item.className = 'file-item'
-	item.innerHTML = `
+  const item = document.createElement("div");
+  item.className = "file-item";
+  item.innerHTML = `
     <h3>✅ ${fileInfo.name}</h3>
     <div class="meta">
       大小: ${formatBytes(fileInfo.size)} | 
-      类型: ${fileInfo.type || '未知'} | 
+      类型: ${fileInfo.type || "未知"} | 
       修改时间: ${new Date(fileInfo.lastModified).toLocaleString()}
     </div>
     <div class="chunks">
       分片数: ${fileInfo.chunks.length} | 
       第一个分片哈希: ${fileInfo.chunks[0]?.hash.substring(0, 16)}...
     </div>
-  `
-	fileList.appendChild(item)
-	updateStats()
+  `;
+  fileList.appendChild(item);
+  updateStats();
 }
 
 // 显示错误
 function displayError(error: UploadError) {
-	const errorDiv = document.createElement('div')
-	errorDiv.className = 'error'
-	errorDiv.innerHTML = `
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "error";
+  errorDiv.innerHTML = `
     <strong>错误:</strong> ${error.message}
-    ${error.file ? `<br><small>文件: ${error.file.name}</small>` : ''}
-    ${error.chunkIndex !== undefined ? `<br><small>分片索引: ${error.chunkIndex}</small>` : ''}
-  `
-	errorContainer.appendChild(errorDiv)
+    ${error.file ? `<br><small>文件: ${error.file.name}</small>` : ""}
+    ${error.chunkIndex !== undefined ? `<br><small>分片索引: ${error.chunkIndex}</small>` : ""}
+  `;
+  errorContainer.appendChild(errorDiv);
 
-	// 3秒后自动移除
-	setTimeout(() => {
-		errorDiv.remove()
-	}, 5000)
+  // 3秒后自动移除
+  setTimeout(() => {
+    errorDiv.remove();
+  }, 5000);
 }
 
 // 格式化字节数
 function formatBytes(bytes: number): string {
-	if (bytes === 0) return '0 B'
-	const k = 1024
-	const sizes = ['B', 'KB', 'MB', 'GB']
-	const i = Math.floor(Math.log(bytes) / Math.log(k))
-	return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 // 清空所有
 function clearAll() {
-	fileProgressMap.clear()
-	fileResultsMap.clear()
-	currentFiles = []
-	progressList.innerHTML = ''
-	fileList.innerHTML = ''
-	errorContainer.innerHTML = ''
-	progressSection.style.display = 'none'
-	stats.style.display = 'none'
-	fileInput.value = ''
-	// 取消正在进行的操作
-	if (cancelController) {
-		cancelController.cancel()
-		cancelController = null
-	}
+  fileProgressMap.clear();
+  fileResultsMap.clear();
+  currentFiles = [];
+  progressList.innerHTML = "";
+  fileList.innerHTML = "";
+  errorContainer.innerHTML = "";
+  progressSection.style.display = "none";
+  stats.style.display = "none";
+  fileInput.value = "";
+  // 取消正在进行的操作
+  if (cancelController) {
+    cancelController.cancel();
+    cancelController = null;
+  }
 }
 
 // 开始处理
 function startProcessing() {
-	const files = Array.from(fileInput.files || [])
-	if (files.length === 0) return
+  const files = Array.from(fileInput.files || []);
+  if (files.length === 0) return;
 
-	clearAll()
-	currentFiles = files
+  clearAll();
+  currentFiles = files;
 
-	const options = {
-		validation: {
-			maxSize: 2 * 1024 * 1024 * 1024, // 2GB
-		},
-		onProgress: (progress: ProgressInfo) => {
-			updateProgress(progress.file, progress)
-			console.log(`进度: ${progress.percentage}%`)
-		},
-		onError: (error: UploadError) => {
-			displayError(error)
-		},
-	}
+  const options = {
+    validation: {
+      maxSize: 2 * 1024 * 1024 * 1024, // 2GB
+    },
+    onProgress: (progress: ProgressInfo) => {
+      updateProgress(progress.file, progress);
+      console.log(`进度: ${progress.percentage}%`);
+    },
+    onError: (error: UploadError) => {
+      displayError(error);
+    },
+  };
 
-	if (currentMode === 'batch') {
-		// 批量回调模式
-		cancelController = chunkUpload(files, {
-			...options,
-			perCallback: fileInfo => {
-				displayFileResult(fileInfo)
-			},
-			lastCallback: files => {
-				console.log('所有文件处理完成:', files)
-			},
-		}) as any
-	} else {
-		// 立即回调模式
-		cancelController = chunkUploadStream(files, {
-			...options,
-			callback: chunk => {
-				console.log('分片完成:', chunk)
-				// 可以在这里显示每个分片的信息
-			},
-		}) as any
-	}
+  if (currentMode === "batch") {
+    // 批量回调模式
+    const result = chunkUpload(files, {
+      ...options,
+      perCallback: (fileInfo) => {
+        displayFileResult(fileInfo);
+      },
+      lastCallback: (files) => {
+        console.log("所有文件处理完成:", files);
+      },
+    });
+    // chunkUpload 传入 files 时返回 Promise，不返回 CancelController
+    // 所以这里不需要设置 cancelController
+    result.catch((error) => {
+      console.error("处理失败:", error);
+    });
+  } else {
+    // 立即回调模式
+    const result = chunkUploadStream(files, {
+      ...options,
+      callback: (chunk) => {
+        console.log("分片完成:", chunk);
+        // 可以在这里显示每个分片的信息
+      },
+    });
+    // chunkUploadStream 传入 files 时返回 Promise，不返回 CancelController
+    result.catch((error) => {
+      console.error("处理失败:", error);
+    });
+  }
 }
-
 
 // 创建测试文件并测试
 async function createTestFileAndTest() {
-	try {
-		// 创建 5MB 测试文件
-		const size = 5 * 1024 * 1024
-		const content = new Uint8Array(size)
-		for (let i = 0; i < size; i++) {
-			content[i] = i % 256
-		}
-		const blob = new Blob([content], { type: 'application/octet-stream' })
-		const testFile = new File([blob], 'test-5mb.bin', {
-			type: 'application/octet-stream',
-			lastModified: Date.now(),
-		})
+  try {
+    // 创建 5MB 测试文件
+    const size = 5 * 1024 * 1024;
+    const content = new Uint8Array(size);
+    for (let i = 0; i < size; i++) {
+      content[i] = i % 256;
+    }
+    const blob = new Blob([content], { type: "application/octet-stream" });
+    const testFile = new File([blob], "test-5mb.bin", {
+      type: "application/octet-stream",
+      lastModified: Date.now(),
+    });
 
-		console.log(
-			'创建测试文件:',
-			testFile.name,
-			`大小: ${(testFile.size / 1024 / 1024).toFixed(2)} MB`,
-		)
+    console.log(
+      "创建测试文件:",
+      testFile.name,
+      `大小: ${(testFile.size / 1024 / 1024).toFixed(2)} MB`
+    );
 
-		const startTime = Date.now()
-		console.log('开始处理测试文件...')
+    const startTime = Date.now();
+    console.log("开始处理测试文件...");
 
-		const result = await chunkUpload([testFile], {
-			onProgress: progress => {
-				updateProgress(progress.file, progress)
-				console.log(`进度: ${progress.percentage}%`)
-			},
-			onError: error => {
-				displayError(error)
-				console.error('错误:', error)
-			},
-			perCallback: fileInfo => {
-				displayFileResult(fileInfo)
-				console.log('文件处理完成:', fileInfo)
-			},
-		})
+    const result = await chunkUpload([testFile], {
+      onProgress: (progress) => {
+        updateProgress(progress.file, progress);
+        console.log(`进度: ${progress.percentage}%`);
+      },
+      onError: (error) => {
+        displayError(error);
+        console.error("错误:", error);
+      },
+      perCallback: (fileInfo) => {
+        displayFileResult(fileInfo);
+        console.log("文件处理完成:", fileInfo);
+      },
+    });
 
-		const endTime = Date.now()
-		const duration = ((endTime - startTime) / 1000).toFixed(2)
-		console.log(`✅ 测试完成: ${result.length} 个文件，耗时 ${duration} 秒`)
+    const endTime = Date.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    console.log(`✅ 测试完成: ${result.length} 个文件，耗时 ${duration} 秒`);
 
-		setStatus(
-			`测试完成: ${result.length} 个文件，耗时 ${duration} 秒`,
-			'success',
-		)
-	} catch (error) {
-		console.error('测试失败:', error)
-		setStatus(
-			`测试失败: ${error instanceof Error ? error.message : String(error)}`,
-			'error',
-		)
-	}
+    setStatus(
+      `测试完成: ${result.length} 个文件，耗时 ${duration} 秒`,
+      "success"
+    );
+  } catch (error) {
+    console.error("测试失败:", error);
+    setStatus(
+      `测试失败: ${error instanceof Error ? error.message : String(error)}`,
+      "error"
+    );
+  }
 }
 
 function setStatus(
-	message: string,
-	type: 'success' | 'error' | 'info' = 'info',
+  message: string,
+  type: "success" | "error" | "info" = "info"
 ) {
-	const statusDiv = document.createElement('div')
-	statusDiv.className = `status ${type}`
-	statusDiv.textContent = message
-	statusDiv.style.marginTop = '1rem'
-	document.querySelector('.container')?.appendChild(statusDiv)
+  const statusDiv = document.createElement("div");
+  statusDiv.className = `status ${type}`;
+  statusDiv.textContent = message;
+  statusDiv.style.marginTop = "1rem";
+  document.querySelector(".container")?.appendChild(statusDiv);
 
-	setTimeout(() => {
-		statusDiv.remove()
-	}, 5000)
+  setTimeout(() => {
+    statusDiv.remove();
+  }, 5000);
 }
 
 // 事件监听
 document
-	.getElementById('test-btn')
-	?.addEventListener('click', createTestFileAndTest)
+  .getElementById("test-btn")
+  ?.addEventListener("click", createTestFileAndTest);
 
 // 文件选择变化时自动开始处理
-fileInput.addEventListener('change', () => {
-	if (fileInput.files && fileInput.files.length > 0) {
-		startProcessing()
-	}
-})
+fileInput.addEventListener("change", () => {
+  if (fileInput.files && fileInput.files.length > 0) {
+    startProcessing();
+  }
+});
 
-console.log('Demo 已加载')
+console.log("Demo 已加载");

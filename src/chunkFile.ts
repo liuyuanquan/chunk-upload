@@ -174,7 +174,7 @@ export function chunkFile(
               taskResolve(chunks);
             },
             // Worker 处理失败回调
-            reject: (error) => {
+            reject: (error: unknown) => {
               // 如果已取消，直接拒绝
               if (controller.isCancelled()) {
                 taskReject(new Error("操作已取消"));

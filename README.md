@@ -1,4 +1,4 @@
-# Chunk Upload Lib
+# Chunk Upload
 
 > 一个简单快速的文件分片上传库，使用 Web Workers 进行并行处理
 
